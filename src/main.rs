@@ -274,19 +274,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // wordlist load
 
 
-    let wordlist_path = match matches.opt_str("w") {
-        Some(path) => {
-            if !file_exists(&path) {
-                println!("{} don't exist.", &path);
-                process::exit(1);
-            }
-            path
-        }
-        None => {
-            println!("wordlist is Empty.");
+    let mut wordlist_path = String::new();
+    if let Some(path) = matches.opt_str("w") {
+        if !file_exists(&path) {
+            println!("{} don't exist.", &path);
             process::exit(1);
         }
-    };
+        wordlist_path = path;
+    }
 
     print!("Load... ");
     std::io::stdout().flush()?;
@@ -305,6 +300,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let wordlist: Vec<String> = wordlist.iter().cloned().collect();
+    if wordlist.is_empty() {
+        println!("wordlist is Empty.");
+        process::exit(1);
+    }
+    
     println!("DONE");
     if concurrent_num > wordlist.len() {
         concurrent_num = wordlist.len() / 2;
