@@ -11,19 +11,18 @@ use std::collections::{HashSet, LinkedList};
 use std::{env, mem};
 use std::fs;
 use std::fs::File;
-use std::hash::Hash;
-use std::io::{BufRead, BufReader, Error, IsTerminal, Read};
+use std::io::{BufRead, BufReader, Read};
 use std::process;
 use std::sync::atomic::{AtomicBool};
 use std::sync::{Arc, RwLock};
 use std::io::Write;
-use console::{style, StyledObject};
 use log::LevelFilter;
 use rand::Rng;
 use crate::common::{adjust_ulimit_size, bytes_to_gb, bytes_to_mb, COMMON_USER_AGENTS, DEFAULT_DNS_SERVERS, file_exists, opt_int_parm, opt_int_some_parm};
 use crate::data_type::*;
 use crate::scanner::Scanner;
 use chashmap::CHashMap;
+use is_terminal::IsTerminal;
 use redb::{Database, ReadableTable, TableDefinition};
 use sysinfo::{System, SystemExt};
 
@@ -138,7 +137,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     opts.optopt("", "rt", "request timeout", "Int");
     opts.optopt("c", "parallel", "Number of parallel requests", "1000");
-    opts.optflag("f", "follow-redirect", "enable redirect 301/302, default is false,");
+    opts.optopt("", "follow-redirect", "enable redirect 301/302, default is false,", "INT");
     opts.optopt("r", "retrie", "Number of failed retry requests", "1");
     opts.optopt("x", "proxy", "proxy request, http/https/socks5", "socks5://1.1.1.1:1080");
     opts.optopt("U", "auth", "proxy auth, if required", "username:password");
@@ -259,6 +258,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let match_resp_size = opt_int_some_parm("ms", &matches);
     let match_resp_line = opt_int_some_parm("ml", &matches);
+    let follow_redirect_num = opt_int_parm("follow-redirect", &matches, 0);
+
 
     let custom_matches = Matches {
         regex: match_regex,
@@ -344,7 +345,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         proxy_server,
         proxy_user: proxy_user.to_owned(),
         proxy_pass: proxy_pass.to_owned(),
-        scan_mode
+        scan_mode,
+        follow_redirect: follow_redirect_num,
     };
     print_state.then(||{
         print_start_info(&options)

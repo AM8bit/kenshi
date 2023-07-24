@@ -95,7 +95,6 @@ impl<'a> Scanner<'a> {
             .timeout(Duration::from_secs(options.request_timeout))
             .connect_timeout(Duration::from_secs(options.request_timeout))
             .default_headers(headers)
-            .redirect(redirect::Policy::none())
             .http1_only()
             .trust_dns(true)
             .gzip(true)
@@ -104,7 +103,11 @@ impl<'a> Scanner<'a> {
             .tcp_nodelay(true)
             .tcp_keepalive(None);
             //.dns_resolver(Arc::new(TrustDnsResolver::new().map_err(crate::error::builder)?));
-
+        if options.follow_redirect == 0 {
+            client = client.redirect(redirect::Policy::none())
+        }else {
+            client = client.redirect(redirect::Policy::limited(options.follow_redirect))
+        }
         if !options.proxy_server.is_empty() {
             match reqwest::Proxy::all(options.proxy_server.clone()) {
                 Ok(mut p) => {

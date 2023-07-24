@@ -14,7 +14,7 @@ pub struct Options<'a> {
     pub proxy_server: String,
     pub proxy_user: String,
     pub proxy_pass: String,
-    pub follow_redirect: reqwest::redirect::Policy,
+    pub follow_redirect: usize,
     pub wordlist: Vec<String>,
     pub fuzz_url: String,
     pub result_file: String,
