@@ -16,7 +16,6 @@ endif
 
 build:
 	cargo build $(release) --target x86_64-unknown-linux-musl
-	#strip -s target/$(target)/kenshi
 	strip --strip-unneeded target/x86_64-unknown-linux-musl/$(target)/kenshi
 	cp -fv target/x86_64-unknown-linux-musl/$(target)/kenshi .
 	upx -9 kenshi

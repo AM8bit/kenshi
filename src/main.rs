@@ -123,27 +123,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     opts.optopt("w", "wordlist", "required. fuzz wordlist", "FILE");
     opts.optopt("o", "output", "Output result", "FILE");
 
-    /*
-
-MATCHER OPTIONS:
-  -mc                 Match HTTP status codes, or "all" for everything. (default: 200,204,301,302,307,401,403,405,500)
-  -ml                 Match amount of lines in response
-  -mmode              Matcher set operator. Either of: and, or (default: or)
-  -mr                 Match regexp
-  -ms                 Match HTTP response size
-  -mt                 Match how many milliseconds to the first response byte, either greater or less than. EG: >100 or <100
-  -mw                 Match amount of words in response
-
-FILTER OPTIONS:
-  -fc                 Filter HTTP status codes from response. Comma separated list of codes and ranges
-  -fl                 Filter by amount of lines in response. Comma separated list of line counts and ranges
-  -fmode              Filter set operator. Either of: and, or (default: or)
-  -fr                 Filter regexp
-  -fs                 Filter HTTP response size. Comma separated list of sizes and ranges
-  -ft                 Filter by number of milliseconds to the first response byte, either greater or less than. EG: >100 or <100
-  -fw                 Filter by amount of words in response. Comma separated list of word counts and ranges
-     */
-
     // match option
     opts.optopt("", "mc", r#"Match HTTP status codes, or "all" for everything. (default: 200,403)"#, "");
     opts.optopt("", "mr", "Match regexp", "regexp");
