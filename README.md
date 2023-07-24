@@ -31,7 +31,7 @@ Additions...
 
 ```sh
 # Cargo required.
-cargo install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
+cargo install --git https://github.com/AM8bit/kenshi
 ```
 
 # Build
@@ -95,6 +95,8 @@ Options:
     -h, --help          print this help menu
 
 ```
+#### Match page string
+kenshi -u https://FUZZ/robots.txt --debug
 
 
 # License
