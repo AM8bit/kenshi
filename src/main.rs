@@ -214,7 +214,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut proxy_server= String::new();
     let mut proxy_user= String::new();
     let mut proxy_pass= String::new();
-    if let Some(s) = matches.opt_str("p") {
+    if let Some(s) = matches.opt_str("x") {
         proxy_server = s;
         if let Some(s) = matches.opt_str("U") {
             let auth: Vec<&str> = s.splitn(2, ':').collect();
