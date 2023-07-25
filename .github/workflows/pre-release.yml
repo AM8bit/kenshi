@@ -17,7 +17,7 @@ jobs:
       - name: "Build & test"
         run: |
           cargo build --release --verbose
-          cp target/release/release kenshi
+          cp target/release/kenshi kenshi
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
