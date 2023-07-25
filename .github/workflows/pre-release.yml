@@ -17,7 +17,7 @@ jobs:
           
       - name: Install deps
         run: |
-          sudo apt-get install musl musl-tools gcc-multilib gcc-mingw-w64-i686 -y
+          sudo apt-get install musl musl-tools gcc-multilib gcc-mingw-w64-i686 gcc-mingw-w64-x86-64 -y
           mkdir bin && echo ok
 
           
