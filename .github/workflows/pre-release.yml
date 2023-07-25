@@ -17,8 +17,8 @@ jobs:
           
       - name: Install deps
         run: |
-          sudo apt-get install gcc-multilib gcc-mingw-w64-i686 -y
-          mkdir bin
+          sudo apt-get install musl gcc-multilib gcc-mingw-w64-i686 -y
+
           
       - name: Install toolchain
         run: |
