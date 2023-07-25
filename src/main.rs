@@ -283,8 +283,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     }
     let wordlist: Vec<String> = wordlist.iter().cloned().collect();
     if wordlist.is_empty() {
-        println!("wordlist is Empty.");
-        process::exit(1);
+        return Err("wordlist is Empty.".to_string());
     }
 
     println!("DONE");
