@@ -1,6 +1,6 @@
 # kenshi
 
-A tool that focuses on medium-sized scans, same as ffuf but also different.
+A tool that focuses on medium-sized scans, same as [ffuf](https://github.com/ffuf/ffuf) but also different.
 It is currently in its infancy
 
 ![demo](static/demo.png)
