@@ -57,7 +57,7 @@ jobs:
       - name: "Build x86_64-pc-windows-gnu"
         run: |
           cargo build --release --target x86_64-pc-windows-gnu --verbose
-          mv target/x86_64-pc-windows-gnu/release/kenshi ./bin/kenshi_win_amd64
+          mv target/x86_64-pc-windows-gnu/release/kenshi.exe ./bin/kenshi_win_amd64
           
       - name: Run UPX
         uses: crazy-max/ghaction-upx@v2
