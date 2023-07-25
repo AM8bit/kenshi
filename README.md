@@ -96,7 +96,9 @@ Options:
 
 ```
 #### Match page string
-kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mr test_str
+`kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mr test_str`
+#### Match status code
+`kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mc 200,403`
 
 
 # License
