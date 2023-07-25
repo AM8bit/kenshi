@@ -17,12 +17,14 @@ It is currently in its infancy
 
 We need to care about the meaning of the following parameters
 
-- Debug mode: used to get detailed parameters of the target, to decide on optimization parameters, and to debug network errors (similar to ffuf's scanning results).
-    - Parameter --debug
-- detail mode: get detailed scanning status, with progress bar and HTTP/IO related status display.
-    - Parameter --stats
-- Silent mode: only need results and speed, don't care about everything.
-    - Parameters --silent
+### Debug mode
+used to get detailed parameters of the target, to decide on optimization parameters, and to debug network errors (similar to ffuf's scanning results).
+### detail mode
+get detailed scanning status, with progress bar and HTTP/IO related status display.
+- Parameter --stats
+### Silent mode
+only need results and speed, don't care about everything.
+- Parameter --silent
 
 # performance test
 Additions...
