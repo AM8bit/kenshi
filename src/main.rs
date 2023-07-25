@@ -104,7 +104,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     let program = args[0].clone();
     let mut opts = Options::new();
     opts.reqopt("u", "url", "required. Test url", "URL");
-    opts.reqopt("w", "wordlist", "required. fuzz wordlist", "FILE");
+    opts.reqopt("w", "wordlist", "required. Wordlist file path and (optional) keyword separated by colon. eg. '/path/to/wordlist:KEYWORD'", "FILE");
     opts.optopt("o", "output", "Output result", "FILE");
 
     // match option
@@ -119,7 +119,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     opts.optopt("", "fmode", r#"Filter set operator. Either of: and, or (default: or)"#, "");
     opts.optopt("", "fr", r#"Filter regexp"#, "");
     opts.optopt("", "fs", r#"Filter HTTP response size. Comma separated list of sizes and ranges"#, "");
-
+    // scan
     opts.optopt("", "rt", "request timeout", "Int");
     opts.optopt("c", "parallel", "Number of parallel requests", "1000");
     opts.optopt("", "follow-redirect", "enable redirect 301/302, default is false,", "INT");
@@ -127,12 +127,25 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     opts.optopt("x", "proxy", "proxy request, http/https/socks5", "socks5://1.1.1.1:1080");
     opts.optopt("U", "auth", "proxy auth, if required", "username:password");
     opts.optflag("", "clear", "cache Clear");
+    // dirsearch
+    opts.optopt("D", "", "DirSearch wordlist compatibility mode. Used in conjunction with -e flag. (default: false)", "");
+    opts.optopt("e", "ext", "Comma separated list of extensions. Extends FUZZ keyword.", "");
     // mode
-    opts.optflag("", "debug", "More detailed logging mode");
+    opts.optopt("m", "mode", "Multi-wordlist operation mode. Available modes: clusterbomb, pitchfork, sniper (default: clusterbomb)", "");
+    //opts.optflag("", "debug", "More detailed logging mode");
     opts.optflag("", "silent", "silent mode");
     opts.optflag("v", "stats", "Display detailed scanning status");
     opts.optopt("", "dns-list", "Specify a list of name servers", "Url or File");
     //opts.optopt("p", "port", "binding port", "PORT");
+    /*
+        -D
+        -e                  Comma separated list of extensions. Extends FUZZ keyword.
+        -mode
+        -request            File containing the raw http request
+        -request-proto      Protocol to use along with raw request (default: https)
+        -w                  Wordlist file path and (optional) keyword separated by colon. eg. '/path/to/wordlist:KEYWORD'
+
+     */
     opts.optflag("h", "help", "print this help menu");
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
