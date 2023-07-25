@@ -21,13 +21,15 @@ use std::io::Write;
 use std::process::exit;
 use log::LevelFilter;
 use rand::Rng;
-use crate::common::{adjust_ulimit_size, bytes_to_gb, bytes_to_mb, COMMON_USER_AGENTS, DEFAULT_DNS_SERVERS, file_exists, opt_int_parm, opt_int_some_parm};
+use crate::common::{bytes_to_gb, bytes_to_mb, COMMON_USER_AGENTS, DEFAULT_DNS_SERVERS, file_exists, opt_int_parm, opt_int_some_parm};
 use crate::data_type::*;
 use crate::scanner::Scanner;
 use chashmap::CHashMap;
 use is_terminal::IsTerminal;
 use redb::{Database, ReadableTable, TableDefinition};
 use sysinfo::{System, SystemExt};
+#[cfg(unix)]
+use crate::common::adjust_ulimit_size;
 
 
 #[derive(Debug)]
@@ -220,6 +222,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     let mut concurrent_num = opt_int_parm("c", &matches, 100);
     let ulimit = concurrent_num as u64 * 2;
     if ulimit > G_DEFAULT_FILE_DESC_LIMIT {
+        #[cfg(unix)]
         let _ = adjust_ulimit_size(G_DEFAULT_FILE_DESC_LIMIT) as usize;
     }
 

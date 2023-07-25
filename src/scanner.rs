@@ -160,7 +160,7 @@ impl<'a> Scanner<'a> {
                         }
                         Err(e) => {
                             stats_err_inc(&e);
-                            log::error!("{}", e.to_string());
+                            log::error!("{} {}", fuzz_url, e.to_string());
                         }
                     }
                 }
