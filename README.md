@@ -17,7 +17,7 @@ It is currently in its infancy
 
 We need to care about the meaning of the following parameters
 
-### Debug mode
+### Debug mode(default)
 used to get detailed parameters of the target, to decide on optimization parameters, and to debug network errors (similar to ffuf's scanning results).
 ### detail mode
 get detailed scanning status, with progress bar and HTTP/IO related status display.
