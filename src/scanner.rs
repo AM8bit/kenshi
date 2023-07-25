@@ -50,7 +50,7 @@ impl<'a> Scanner<'a> {
         pb.set_position(0);
         status_bar.set_position(0);
         stats_bar.set_position(0);
-        if !self.options.print_state {
+        if !self.options.params.print_state {
             status_bar.finish_and_clear();
             stats_bar.finish_and_clear();
         }
@@ -83,7 +83,7 @@ impl<'a> Scanner<'a> {
     pub fn client_build(&self)-> Option<Client> {
         let mut headers = HeaderMap::new();
         let options = self.options;
-        headers.insert(header::USER_AGENT, options.user_agent.parse().unwrap());
+        headers.insert(header::USER_AGENT, options.params.user_agent.parse().unwrap());
         headers.insert(header::ACCEPT_LANGUAGE, "en-US,en;q=0.9".parse().unwrap());
 
         let (config, opts) = read_system_conf().unwrap();
@@ -92,8 +92,8 @@ impl<'a> Scanner<'a> {
         let mut client = Client::builder()
             .use_rustls_tls()
             .danger_accept_invalid_certs(true)
-            .timeout(Duration::from_secs(options.request_timeout))
-            .connect_timeout(Duration::from_secs(options.request_timeout))
+            .timeout(Duration::from_secs(options.params.request_timeout))
+            .connect_timeout(Duration::from_secs(options.params.request_timeout))
             .default_headers(headers)
             .http1_only()
             .trust_dns(true)
@@ -103,15 +103,15 @@ impl<'a> Scanner<'a> {
             .tcp_nodelay(true)
             .tcp_keepalive(None);
             //.dns_resolver(Arc::new(TrustDnsResolver::new().map_err(crate::error::builder)?));
-        if options.follow_redirect == 0 {
+        if options.params.follow_redirect == 0 {
             client = client.redirect(redirect::Policy::none())
         }else {
-            client = client.redirect(redirect::Policy::limited(options.follow_redirect))
+            client = client.redirect(redirect::Policy::limited(options.params.follow_redirect))
         }
-        if !options.proxy_server.is_empty() {
-            match reqwest::Proxy::all(options.proxy_server.clone()) {
+        if !options.params.proxy_server.is_empty() {
+            match reqwest::Proxy::all(options.params.proxy_server.clone()) {
                 Ok(mut p) => {
-                    p = p.basic_auth(&options.proxy_user, &options.proxy_pass);
+                    p = p.basic_auth(&options.params.proxy_user, &options.params.proxy_pass);
                     client = client.proxy(p);
                 },
                 Err(e) => {
@@ -128,19 +128,19 @@ impl<'a> Scanner<'a> {
         use std::sync::mpsc::channel;
         let (pr_tx, pr_rx): (Sender<String>, Receiver<String>) = channel();
 
-        let mut listen_data = ListenData::new(pr_tx, options.scan_mode);
-        listen_data.listen_data(&options.result_file, options.custom_matches.clone());
+        let mut listen_data = ListenData::new(pr_tx, options.params.scan_mode);
+        listen_data.listen_data(&options.params.result_file, options.params.custom_matches.clone());
         let client = self.client_build();
         let client = match client {
             Some(c) => c,
             None => panic!("http client failed to initialize.")
         };
-        let bodies = stream::iter(options.wordlist.clone()).map(|payload| {
+        let bodies = stream::iter(options.params.wordlist.clone()).map(|payload| {
             let client = client.clone();
-            let fuzz_url = options.fuzz_url.replace("FUZZ", &payload);
+            let fuzz_url = options.params.fuzz_url.replace("FUZZ", &payload);
             //let stats = stats.clone();
             tokio::spawn(async move {
-                for _ in 0..options.request_retries {
+                for _ in 0..options.params.request_retries {
                     let start = Instant::now();
                     let resp = client.get(&fuzz_url).send().await;
                     match resp {
@@ -167,9 +167,9 @@ impl<'a> Scanner<'a> {
                 None
             })
         })
-            .buffer_unordered(options.concurrent_num);
+            .buffer_unordered(options.params.concurrent_num);
 
-        let deps = options.wordlist.len() as u64;
+        let deps = options.params.wordlist.len() as u64;
         let (pb, status_bar, stats_bar) = self.install_pb(deps);
         //let status_bar = status_bar.unwrap();
         //let stats_bar = stats_bar.unwrap();
@@ -178,7 +178,7 @@ impl<'a> Scanner<'a> {
             if let Ok(msg) = pr_rx.try_recv() {
                 pb.println(msg);
             }
-            if options.print_state {
+            if options.params.print_state {
                 self.refresh_pb(&status_bar, &stats_bar);
             }
             if let Ok(Some(resp)) = resp {

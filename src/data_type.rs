@@ -5,10 +5,9 @@ use redb::Database;
 use serde::{Deserialize, Serialize};
 use sysinfo::System;
 
-#[derive(Clone)]
-pub struct Options<'a> {
+#[derive(Clone, Debug)]
+pub struct Params {
     pub user_agent: String,
-    pub db: &'a Database,
     pub request_timeout: u64,
     pub concurrent_num: usize,
     pub proxy_server: String,
@@ -18,11 +17,17 @@ pub struct Options<'a> {
     pub wordlist: Vec<String>,
     pub fuzz_url: String,
     pub result_file: String,
-    pub custom_matches: Matches,
     pub print_state: bool,
     pub request_retries: usize,
-    pub sys: &'a System,
     pub scan_mode: ScanMode,
+    pub custom_matches: Matches,
+}
+
+#[derive(Clone)]
+pub struct Options<'a> {
+    pub db: &'a Database,
+    pub sys: &'a System,
+    pub params: Params,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

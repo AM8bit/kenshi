@@ -3,12 +3,14 @@ mod scanner;
 mod data_type;
 mod data_handler;
 mod error;
+mod tests;
 
 use getopts::Options;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::{HashSet, LinkedList};
 use std::{env, mem};
+use std::fmt::Error;
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
@@ -16,6 +18,7 @@ use std::process;
 use std::sync::atomic::{AtomicBool};
 use std::sync::{Arc, RwLock};
 use std::io::Write;
+use std::process::exit;
 use log::LevelFilter;
 use rand::Rng;
 use crate::common::{adjust_ulimit_size, bytes_to_gb, bytes_to_mb, COMMON_USER_AGENTS, DEFAULT_DNS_SERVERS, file_exists, opt_int_parm, opt_int_some_parm};
@@ -80,46 +83,28 @@ const G_DEFAULT_FILE_DESC_LIMIT: u64 = 65535;
 
 fn print_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} [options]", program);
-    print!("{}", opts.usage(&brief));
+    println!("{}", opts.usage(&brief));
 }
 
 fn print_start_info(option: &data_type::Options) {
-    let mem_size = mem::size_of_val(&*option.wordlist);
-    println!("wordlist: {}/lines, mem size: {:.2}/Mb", option.wordlist.len(), bytes_to_mb(mem_size as u64));
-    println!("concurrents: {}",  option.concurrent_num);
-    println!("retries: {}", option.request_retries);
-    println!("request timeout: {}/s", option.request_timeout);
-    println!("User-agent: {}", option.user_agent);
+    let mem_size = mem::size_of_val(&*option.params.wordlist);
+    println!("wordlist: {}/lines, mem size: {:.2}/Mb", option.params.wordlist.len(), bytes_to_mb(mem_size as u64));
+    println!("concurrents: {}",  option.params.concurrent_num);
+    println!("retries: {}", option.params.request_retries);
+    println!("request timeout: {}/s", option.params.request_timeout);
+    println!("User-agent: {}", option.params.user_agent);
     println!("DNS Servers: {}", DEFAULT_DNS_SERVERS.len());
     println!("total memory: {:.2}/Gb", bytes_to_gb(option.sys.total_memory()));
     println!("total swap: {:.2}/Mb", bytes_to_mb(option.sys.total_swap()));
-    println!("mode: {}", option.scan_mode.to_string());
+    println!("mode: {}", option.params.scan_mode.to_string());
     println!();
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let target = Box::new(File::create("kenshi.log").expect("Can't create file"));
-    env_logger::Builder::new()
-        .target(env_logger::Target::Pipe(target))
-        .filter(None, LevelFilter::Info)
-        .format(|buf, record| {
-            writeln!(
-                buf,
-                "[{} {}:{}] {}",
-                record.level(),
-                record.file().unwrap_or("unknown"),
-                record.line().unwrap_or(0),
-                record.args()
-            )
-        })
-        .init();
-
-    let args: Vec<String> = env::args().collect();
+pub fn parse_args(args: &[String]) -> Result<Params, String> {
     let program = args[0].clone();
     let mut opts = Options::new();
-    opts.optopt("u", "url", "required. Test url", "URL");
-    opts.optopt("w", "wordlist", "required. fuzz wordlist", "FILE");
+    opts.reqopt("u", "url", "required. Test url", "URL");
+    opts.reqopt("w", "wordlist", "required. fuzz wordlist", "FILE");
     opts.optopt("o", "output", "Output result", "FILE");
 
     // match option
@@ -152,34 +137,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
         Err(f) => {
-            println!("{}", f.to_string());
-            return Ok(());
+            print_usage(&program, opts);
+            return Err(f.to_string())
         }
     };
 
     if args.len() == 1 || matches.opt_present("h") {
         print_usage(&program, opts);
-        return Ok(());
+        exit(1);
     }
-
-    // init env
-    if fs::create_dir_all("data").is_err() {
-        log::error!("sled directory create failed.");
-        process::exit(1);
-    }
-
-    let db = Database::create("cache")?;
 
     if matches.opt_present("clear") {
         println!("OK.");
-        process::exit(1);
+        exit(1);
     }
 
     let result_path = match matches.opt_str("o") {
         Some(f) => {
             if file_exists(&f) {
-                println!("{} exists, please note.", &f);
-                process::exit(1);
+                return Err(format!("{} exists, please note.", &f).to_string());
             }
             f
         }
@@ -190,11 +166,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let fuzz_url = match matches.opt_str("u") {
         Some(f) => {
+            if !f.contains("FUZZ") {
+                return Err(r#"not found "FUZZ" str."#.to_string());
+            }
             f
         }
         None => {
-            println!("fuzz url is empty.");
-            process::exit(1);
+            return Err("fuzz url is empty.".to_string());
         }
     };
 
@@ -203,7 +181,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             match Regex::new(&r) {
                 Ok(_) => Some(r),
                 Err(e) => {
-                    return Err(Box::try_from(e).unwrap());
+                    return Err(e.to_string());
                 },
             }
         }
@@ -219,14 +197,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Some(s) = matches.opt_str("U") {
             let auth: Vec<&str> = s.splitn(2, ':').collect();
             if auth.len() != 2 {
-                return Err(Box::try_from("Failed to format proxy authentication information".to_string()).unwrap())
+                return Err("Failed to format proxy authentication information".to_string())
             }
             (proxy_user, proxy_pass) = (auth.first().unwrap().to_string(), auth.get(1).unwrap().to_string());
         }
     }
 
     let request_retries = opt_int_parm("r", &matches, 1);
-    let debug_mode = matches.opt_present("debug");
     let mut concurrent_num = opt_int_parm("c", &matches, 100);
     let ulimit = concurrent_num as u64 * 2;
     if ulimit > G_DEFAULT_FILE_DESC_LIMIT {
@@ -239,11 +216,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let match_http_status_code = match matches.opt_str("mc") {
         Some(s) => {
             let split: Vec<&str> = s.split(',').collect();
-
             for code in split {
-                if let Ok(u) = s.parse::<u16>() {
+                if let Ok(u) = code.parse::<u16>() {
                     codes.insert(u);
-
                 }
             }
             codes
@@ -254,7 +229,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             codes
         }
     };
-
 
     let match_resp_size = opt_int_some_parm("ms", &matches);
     let match_resp_line = opt_int_some_parm("ml", &matches);
@@ -268,35 +242,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         resp_size: match_resp_size,
     };
 
-    let mut sys = System::new_all();
-    sys.refresh_all();
-
     // wordlist load
 
 
-    let mut wordlist_path = String::new();
-    if let Some(path) = matches.opt_str("w") {
-        if !file_exists(&path) {
-            println!("{} don't exist.", &path);
-            process::exit(1);
-        }
-        wordlist_path = path;
-    }
-
     print!("Load... ");
-    std::io::stdout().flush()?;
+    let _ = std::io::stdout().flush();
     let mut wordlist: HashSet<String> = HashSet::new();
     let is_tty = std::io::stdin().is_terminal();
     if is_tty {
-            //Stream processing seems more appropriate
-            let file = File::open(wordlist_path).expect("Failed to open file");
-            let reader = BufReader::new(&file);
-            for payload in reader.lines() {
-                wordlist.insert(payload.unwrap());
+        let mut wordlist_path = String::new();
+        if let Some(path) = matches.opt_str("w") {
+            if !file_exists(&path) {
+                return Err(format!("{} don't exist.", &path));
             }
+            wordlist_path = path;
+        }
+        //Stream processing seems more appropriate
+        let file = File::open(wordlist_path).expect("Failed to open file");
+        let reader = BufReader::new(&file);
+        for payload in reader.lines() {
+            wordlist.insert(payload.unwrap());
+        }
     }else {
         for line in std::io::stdin().lines().flatten() {
-                wordlist.insert(line);
+            wordlist.insert(line);
         }
     }
     let wordlist: Vec<String> = wordlist.iter().cloned().collect();
@@ -304,7 +273,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("wordlist is Empty.");
         process::exit(1);
     }
-    
+
     println!("DONE");
     if concurrent_num > wordlist.len() {
         concurrent_num = wordlist.len() / 2;
@@ -330,11 +299,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut rng = rand::thread_rng();
     let ua_str = COMMON_USER_AGENTS[rng.gen_range(0..COMMON_USER_AGENTS.len() - 1)];
 
-    let options = data_type::Options {
+    Ok(data_type::Params {
         user_agent: ua_str.to_owned(),
         request_timeout: request_timeout_sec,
-        db: &db,
-        sys: &sys,
         result_file: result_path,
         wordlist: wordlist.clone(),
         fuzz_url,
@@ -347,17 +314,54 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         proxy_pass: proxy_pass.to_owned(),
         scan_mode,
         follow_redirect: follow_redirect_num,
+    })
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let target = Box::new(File::create("kenshi.log").expect("Can't create file"));
+    env_logger::Builder::new()
+        .target(env_logger::Target::Pipe(target))
+        .filter(None, LevelFilter::Info)
+        .format(|buf, record| {
+            writeln!(
+                buf,
+                "[{} {}:{}] {}",
+                record.level(),
+                record.file().unwrap_or("unknown"),
+                record.line().unwrap_or(0),
+                record.args()
+            )
+        })
+        .init();
+
+    if fs::create_dir_all("data").is_err() {
+        log::error!("cache directory create failed.");
+        process::exit(1);
+    }
+
+    let args: Vec<String> = env::args().collect();
+    let params = parse_args(&args);
+    if let Err(e) = params {
+        eprintln!("{}", e);
+        exit(1)
+    }
+    let params = params.unwrap();
+
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    let db = Database::create("cache")?;
+
+    let options = data_type::Options {
+        db: &db,
+        sys: &sys,
+        params: params.clone(),
     };
-    print_state.then(||{
+    params.print_state.then(||{
         print_start_info(&options)
     });
 
-
-
-//
     let scan = Scanner::new(&options);
     scan.start().await;
     Ok(())
 }
-
-//test
