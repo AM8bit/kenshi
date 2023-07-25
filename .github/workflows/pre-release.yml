@@ -14,16 +14,75 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: create Binary directory
+        run: |
+          mkdir bin
+          
+      - name: Install deps
+        run: |
+          sudo apt-get install gcc-multilib gcc-mingw-w64-i686 -y
+          mkdir bin
+          
+      - name: Install toolchain
+        run: |
+          rustup target add x86_64-unknown-linux-musl
+          rustup target add i686-unknown-linux-gnu
+          rustup target add aarch64-unknown-linux-gnu
+          rustup target add i686-pc-windows-gnu
+          rustup target add i686-pc-windows-msvc
+          rustup target add i686-unknown-linux-gnu
+          rustup target add x86_64-apple-darwin
+          rustup target add x86_64-unknown-freebsd
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-pc-windows-gnu
+          rustup target add x86_64-unknown-linux-gnu
+          
       - name: "Build Linux x86_64 amd"
         run: |
-          cargo build --release --verbose
-          cp target/release/kenshi kenshi
+          cargo build --release --target x86_64-unknown-linux-musl --verbose
+          mv target/x86_64-unknown-linux-musl/release/kenshi ./bin/kenshi_linux_amd64
 
+      - name: "Build Linux i686"
+        run: |
+          cargo build --release --target i686-unknown-linux-gnu --verbose
+          mv target/i686-unknown-linux-gnu/release/kenshi ./bin/kenshi_linux_i686
+      
+      # redb package build err
+      #- name: "Build Freebsd amd x86_64"
+      #  run: |
+      #    cargo build --release --target x86_64-unknown-freebsd --verbose
+      #    mv target/x86_64-unknown-freebsd/release/kenshi kenshi_freebsd_amd64
+
+      #- name: "Build apple darwin x86_64"
+      #  run: |
+      #    cargo build --release --target x86_64-apple-darwin --verbose
+      #    mv target/x86_64-apple-darwin/release/kenshi kenshi_macos_amd64
+      
+      # redb package build err
+      #- name: "Build i686-pc-windows-gnu"
+      #  run: |
+      #    cargo build --release --target i686-pc-windows-gnu --verbose
+      #    mv target/i686-pc-windows-gnu/release/kenshi kenshi_win_i686
+          
+      - name: "Build x86_64-pc-windows-gnu"
+        run: |
+          cargo build --release --target x86_64-pc-windows-gnu --verbose
+          mv target/x86_64-pc-windows-gnu/release/kenshi ./bin/kenshi_win_amd64
+          
+      - name: Run UPX
+        uses: crazy-max/ghaction-upx@v2
+        with:
+          version: latest
+          files: |
+            ./bin/*
+          args: -fq
+          
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build"
+          prerelease: false
+          title: "Latest"
           files: |
-            kenshi
+            kenshi*
+            
