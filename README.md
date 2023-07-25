@@ -96,7 +96,7 @@ Options:
 
 ```
 #### Match page string
-kenshi -u https://FUZZ/robots.txt --debug
+kenshi -u https://FUZZ/robots.txt --mr test_str
 
 
 # License
