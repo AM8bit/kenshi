@@ -53,7 +53,7 @@ jobs:
         run: strip "target/${{ matrix.target }}/release/kenshi"
 
       - name: Run UPX linux
-        if: matrix.build == 'linux' || matrix.build == 'macos'
+        if: matrix.build == 'linux'
         uses: crazy-max/ghaction-upx@v2
         with:
           version: latest
@@ -90,7 +90,14 @@ jobs:
           name: ${{ matrix.archive-name }}
           path: archive/${{ matrix.archive-name }}
           
-          
+            
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -98,4 +105,4 @@ jobs:
           prerelease: false
           title: "v0.01_20230725_3"
           files: |
-            ./archive/${{ matrix.archive-name }}
+            ./archive/*
