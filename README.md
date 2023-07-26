@@ -110,7 +110,7 @@ Options:
 - `kenshi -u https://example.com/FUZZ -w fuzz.dict -D -e php,json,conf --mc 200`
 
 ### Scanning results
-- Currently only support txt text format, the structure is very simple, each line a hit url, no more information.
+- Currently only support text format, the structure is very simple, each line a hit url, no more information.
 
 # License
 
