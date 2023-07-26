@@ -64,15 +64,14 @@ Usage: ./kenshi [options]
 
 Options:
     -u, --url URL       required. Test url
-    -w, --wordlist FILE required. fuzz wordlist
+    -w, --wordlist FILE required. Wordlist file path and (optional) keyword
+                        separated by colon. eg. '/path/to/wordlist:KEYWORD'
     -o, --output FILE   Output result
+        --mc            Match HTTP status codes, or "all" for everything.
+                        (default: 200,403)
         --mr regexp     Match regexp
         --ms length     Match HTTP response size
         --ml int        Match amount of lines in response
-        --mt            Match how many milliseconds to the first response
-                        byte, either greater or less than. EG: >100 or <100
-        --mc            Match HTTP status codes, or "all" for everything.
-                        (default: 200,204,301,302,307,401,403,405,500)
         --fc regexp     Filter HTTP status codes from response. Comma
                         separated list of codes and ranges
         --fl            Filter by amount of lines in response. Comma separated
@@ -82,19 +81,24 @@ Options:
         --fs            Filter HTTP response size. Comma separated list of
                         sizes and ranges
         --rt Int        request timeout
-    -c, --parallel 1000 Number of parallel requests
+    -c, --concurrent 100
+                        Number of concurrent requests
+        --follow-redirect INT
+                        enable redirect 301/302, default is false,
     -r, --retrie 1      Number of failed retry requests
-    -p, --proxy socks5://1.1.1.1:1080
+    -x, --proxy socks5://1.1.1.1:1080
                         proxy request, http/https/socks5
     -U, --auth username:password
                         proxy auth, if required
-        --clear         cache Clear
-        --debug         More detailed logging mode
+    -D                  Replace wordlist %EXT% keywords with extension. Used
+                        in conjunction with -e flag. (default: false)
+    -e, --ext           Comma separated list of extensions. Extends FUZZ
+                        keyword.
         --silent        silent mode
     -v, --stats         Display detailed scanning status
-        --dns-list Url or File
-                        Specify a list of name servers
     -h, --help          print this help menu
+
+
 
 ```
 #### Match page string
