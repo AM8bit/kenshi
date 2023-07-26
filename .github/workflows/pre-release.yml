@@ -85,7 +85,7 @@ jobs:
           fi
             
       - name: Upload archive
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.archive-name }}
           path: archive/${{ matrix.archive-name }}
@@ -95,15 +95,8 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
+
       - uses: actions/download-artifact@v3
-        with:
-          path: archive/
-    
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: false
-          title: "v0.01_20230725_3"
-          files: |
-            ./archive/*
+
+      - name: Display structure of downloaded files
+        run: ls -R
