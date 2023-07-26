@@ -1,6 +1,9 @@
 name: build
 on:
-  workflow_dispatch: {}
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
 jobs:
   build:
     name: build
