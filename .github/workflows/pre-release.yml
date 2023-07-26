@@ -98,5 +98,11 @@ jobs:
 
       - uses: actions/download-artifact@v3
 
-      - name: Display structure of downloaded files
-        run: ls -R
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "v0.01_20230725_3"
+          files: |
+            *
