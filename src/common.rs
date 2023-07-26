@@ -1,5 +1,4 @@
 use std::{fs};
-use redb::{Database, Error, TableDefinition};
 use regex::Regex;
 use crate::data_type::{Matches, MatchResult, HttpResp};
 
@@ -134,7 +133,7 @@ pub fn bytes_to_gb(bytes: u64) -> f64 {
 pub fn bytes_to_mb(bytes: u64) -> f64 {
     bytes as f64 / (1024f64 * 1024f64)
 }
-
+/*
 pub struct Cache {
     db: Database,
 }
@@ -166,6 +165,7 @@ impl Cache {
     }
     
 }
+*/
 
 
 //from RustScan

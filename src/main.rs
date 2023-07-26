@@ -26,7 +26,6 @@ use crate::data_type::*;
 use crate::scanner::Scanner;
 use chashmap::CHashMap;
 use is_terminal::IsTerminal;
-use redb::{Database, ReadableTable, TableDefinition};
 use sysinfo::{System, SystemExt};
 #[cfg(unix)]
 use crate::common::adjust_ulimit_size;
@@ -80,7 +79,6 @@ lazy_static! {
     };
 }
 
-const G_PATH_TABLE: TableDefinition<&str, u64> = TableDefinition::new("hits_uri");
 const G_DEFAULT_FILE_DESC_LIMIT: u64 = 65535;
 
 fn print_usage(program: &str, opts: Options) {
@@ -114,7 +112,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     opts.optopt("", "mr", "Match regexp", "regexp");
     opts.optopt("", "ms", r#"Match HTTP response size"#, "length");
     opts.optopt("", "ml", r#"Match amount of lines in response"#, "int");
-    opts.optopt("", "mt", "Match how many milliseconds to the first response byte, either greater or less than. EG: >100 or <100", "");
+    //opts.optopt("", "mt", "Match how many milliseconds to the first response byte, either greater or less than. EG: >100 or <100", "");
     // filter option
     opts.optopt("", "fc", "Filter HTTP status codes from response. Comma separated list of codes and ranges", "regexp");
     opts.optopt("", "fl", "Filter by amount of lines in response. Comma separated list of line counts and ranges", "");
@@ -123,21 +121,21 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     opts.optopt("", "fs", r#"Filter HTTP response size. Comma separated list of sizes and ranges"#, "");
     // scan
     opts.optopt("", "rt", "request timeout", "Int");
-    opts.optopt("c", "parallel", "Number of parallel requests", "1000");
+    opts.optopt("c", "concurrent", "Number of concurrent requests", "100");
     opts.optopt("", "follow-redirect", "enable redirect 301/302, default is false,", "INT");
     opts.optopt("r", "retrie", "Number of failed retry requests", "1");
     opts.optopt("x", "proxy", "proxy request, http/https/socks5", "socks5://1.1.1.1:1080");
     opts.optopt("U", "auth", "proxy auth, if required", "username:password");
-    opts.optflag("", "clear", "cache Clear");
+    //opts.optflag("", "clear", "cache Clear");
     // dirsearch
-    opts.optopt("D", "", "DirSearch wordlist compatibility mode. Used in conjunction with -e flag. (default: false)", "");
+    opts.optflag("D", "", "Replace wordlist %EXT% keywords with extension. Used in conjunction with -e flag. (default: false)");
     opts.optopt("e", "ext", "Comma separated list of extensions. Extends FUZZ keyword.", "");
     // mode
-    opts.optopt("m", "mode", "Multi-wordlist operation mode. Available modes: clusterbomb, pitchfork, sniper (default: clusterbomb)", "");
+    //opts.optopt("m", "mode", "Multi-wordlist operation mode. Available modes: clusterbomb, pitchfork, sniper (default: clusterbomb)", "");
     //opts.optflag("", "debug", "More detailed logging mode");
     opts.optflag("", "silent", "silent mode");
     opts.optflag("v", "stats", "Display detailed scanning status");
-    opts.optopt("", "dns-list", "Specify a list of name servers", "Url or File");
+    //opts.optopt("", "dns-list", "Specify a list of name servers", "Url or File");
     //opts.optopt("p", "port", "binding port", "PORT");
     /*
         -D
@@ -162,10 +160,12 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
         exit(1);
     }
 
+    /*
     if matches.opt_present("clear") {
         println!("OK.");
         exit(1);
     }
+     */
 
     let result_path = match matches.opt_str("o") {
         Some(f) => {
@@ -258,9 +258,9 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
         resp_size: match_resp_size,
     };
 
+    use console::Term;
     // wordlist load
-
-
+    let term = Term::stdout();
     print!("Load... ");
     let _ = std::io::stdout().flush();
     let mut wordlist: HashSet<String> = HashSet::new();
@@ -269,7 +269,8 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
         let mut wordlist_path = String::new();
         if let Some(path) = matches.opt_str("w") {
             if !file_exists(&path) {
-                return Err(format!("{} don't exist.", &path));
+                let _ = term.clear_line();
+                return Err(format!(r#"wordlist "{}" non-existent."#, &path));
             }
             wordlist_path = path;
         }
@@ -284,12 +285,40 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
             wordlist.insert(line);
         }
     }
+
+    // dirsearch ext replace
+    if matches.opt_present("D") {
+        let mut ext_s: Vec<String> = vec![];
+        if let Some(s) = matches.opt_str("e") {
+            ext_s = s.split(',').map(|s| s.to_string()).collect();
+        }
+        if ext_s.is_empty() {
+            let _ = term.clear_line();
+            return Err("extensions invalid. for example: php,db,conf,bak".to_string());
+        }
+
+        let mut new_wordlist: HashSet<String> = HashSet::new();
+        for line in wordlist.clone().iter() {
+            if line.contains("%EXT%") {
+                for s in ext_s.iter() {
+                    new_wordlist.insert(line.replace("%EXT%", s));
+                }
+                continue
+            }
+            new_wordlist.insert(line.to_string());
+        }
+        wordlist = new_wordlist;
+    }
+
+    // wordlist process
     let wordlist: Vec<String> = wordlist.iter().cloned().collect();
     if wordlist.is_empty() {
         return Err("wordlist is Empty.".to_string());
     }
 
     println!("DONE");
+
+    // Dealing with some strange situations
     if concurrent_num > wordlist.len() {
         concurrent_num = wordlist.len() / 2;
         if concurrent_num == 0 {
@@ -365,10 +394,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut sys = System::new_all();
     sys.refresh_all();
-    let db = Database::create("cache")?;
 
     let options = data_type::Options {
-        db: &db,
         sys: &sys,
         params: params.clone(),
     };

@@ -3,6 +3,7 @@
 
 use std::sync::atomic::Ordering;
 use std::sync::mpsc::{Receiver, Sender};
+use std::thread::sleep;
 use std::time::Duration;
 use futures::{stream, StreamExt};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -58,6 +59,9 @@ impl<'a> Scanner<'a> {
     }
 
     pub fn refresh_pb(&self, status_bar: &ProgressBar, stats_bar: &ProgressBar) {
+        if !self.options.params.print_state {
+            return
+        }
         status_bar.set_message(format!("200: {}, 404: {}, 301: {}, 302: {}, 403: {}, 401: {}, 500: {}",
                                        &G_STATS.get(&Stats::C200).unwrap().to_owned(),
                                        &G_STATS.get(&Stats::C404).unwrap().to_owned(),
@@ -178,9 +182,7 @@ impl<'a> Scanner<'a> {
             if let Ok(msg) = pr_rx.try_recv() {
                 pb.println(msg);
             }
-            if options.params.print_state {
-                self.refresh_pb(&status_bar, &stats_bar);
-            }
+            self.refresh_pb(&status_bar, &stats_bar);
             if let Ok(Some(resp)) = resp {
                     let mut resp_write = G_RESPONSE.write().unwrap();
                     resp_write.enqueue(resp);
@@ -189,6 +191,12 @@ impl<'a> Scanner<'a> {
         //send over signal
         G_LOOP_BREAK.store(false, Ordering::SeqCst);
         listen_data.waiting();
+        // Completion of final work
+        while let Ok(msg) = pr_rx.try_recv() {
+            pb.println(msg);
+            self.refresh_pb(&status_bar, &stats_bar);
+        }
+
         pb.finish_and_clear();
     }
 }

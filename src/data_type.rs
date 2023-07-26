@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 use std::sync::mpsc::{Receiver, Sender};
 use std::time::Duration;
-use redb::Database;
 use serde::{Deserialize, Serialize};
 use sysinfo::System;
 
@@ -25,7 +24,6 @@ pub struct Params {
 
 #[derive(Clone)]
 pub struct Options<'a> {
-    pub db: &'a Database,
     pub sys: &'a System,
     pub params: Params,
 }
@@ -37,6 +35,14 @@ pub struct MatchResult {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Matches {
+    pub regex: Option<String>,
+    pub status_code: HashSet<u16>,
+    pub line_num: Option<usize>,
+    pub resp_size: Option<usize>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FilterRule {
     pub regex: Option<String>,
     pub status_code: HashSet<u16>,
     pub line_num: Option<usize>,
