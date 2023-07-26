@@ -105,7 +105,8 @@ Options:
 `kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mr test_str`
 #### Match status code
 `kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mc 200,403`
-
+#### Replace %EXT%, scanning for specified extensions (compatible with dirsearch -e)
+`kenshi -u https://example.com/FUZZ -w fuzz.dict -D -e php,json,conf --mc 200`
 
 # License
 
