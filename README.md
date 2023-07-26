@@ -53,7 +53,7 @@ make
 ./kenshi --help
 ```
 
-### Usage
+# Usage
 
 The definition of [ffuf](https://github.com/ffuf/ffuf) has been adopted for some of the parameters and descriptions
 
@@ -97,16 +97,20 @@ Options:
         --silent        silent mode
     -v, --stats         Display detailed scanning status
     -h, --help          print this help menu
-
-
-
 ```
+
+### examples
+
+
 #### Match page string
-`kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mr test_str`
+- `kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mr test_str`
 #### Match status code
-`kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mc 200,403`
+- `kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mc 200,403`
 #### Replace %EXT%, scanning for specified extensions (compatible with dirsearch -e)
-`kenshi -u https://example.com/FUZZ -w fuzz.dict -D -e php,json,conf --mc 200`
+- `kenshi -u https://example.com/FUZZ -w fuzz.dict -D -e php,json,conf --mc 200`
+
+### Scanning results
+- Currently only support txt text format, the structure is very simple, each line a hit url, no more information.
 
 # License
 
