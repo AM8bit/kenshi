@@ -99,8 +99,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
+      
+      - name: sha512sum generate
+        run: |
+          cd ./artifact/
+          sha512sum * > SHA512SUM.txt
+          cd ..
+        
       - name: Display structure of downloaded files
         run: ls -R
+        
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
