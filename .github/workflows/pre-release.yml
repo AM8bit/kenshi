@@ -1,78 +1,80 @@
-name: "pre-release"
-
+name: build
 on:
-  push:
-    branches:
-      - "dev"
-  pull_request:
-    branches: [ "dev" ]
-
+  workflow_dispatch: {}
 jobs:
-  pre-release:
-    name: "Pre Release"
-    runs-on: "ubuntu-latest"
+  build:
+    name: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build: [linux, macos, windows]
+        include:
+          - build: linux
+            os: ubuntu-latest
+            rust: nightly
+            target: x86_64-unknown-linux-musl
+            archive-name: kenshi-linux-amd64.tar.gz
+          - build: macos
+            os: macos-latest
+            rust: nightly
+            target: x86_64-apple-darwin
+            archive-name: kenshi-macos-amd64.tar.gz
+          - build: windows
+            os: windows-2019
+            rust: nightly-x86_64-msvc
+            target: x86_64-pc-windows-msvc
+            archive-name: kenshi-windows-amd64.7z
+      fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
-          
-      - name: Install deps
-        run: |
-          sudo apt-get install musl musl-tools gcc-multilib gcc-mingw-w64-i686 gcc-mingw-w64-x86-64 -y
-          mkdir bin && echo ok
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-          
-      - name: Install toolchain
-        run: |
-          rustup target add x86_64-unknown-linux-musl
-          rustup target add i686-unknown-linux-gnu
-          rustup target add x86_64-pc-windows-gnu
-          rustup target add x86_64-apple-darwin
-      
-      # Cross-compiling from Linux to Mac
-      - uses: mbround18/setup-osxcross@v1
-        # This builds executables & sets env variables for rust to consume.
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
         with:
-          osx-version: "12.3"
-          
-      - name: "Build Linux x86_64 amd"
-        run: |
-          cargo build --release --target x86_64-unknown-linux-musl --verbose
-          mv target/x86_64-unknown-linux-musl/release/kenshi ./bin/kenshi_linux_amd64
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+          target: ${{ matrix.target }}
 
-      - name: "Build Linux i686"
-        run: |
-          cargo build --release --target i686-unknown-linux-gnu --verbose
-          mv target/i686-unknown-linux-gnu/release/kenshi ./bin/kenshi_linux_i686
-      
-      # redb package build err
-      #- name: "Build Freebsd amd x86_64"
-      #  run: |
-      #    cargo build --release --target x86_64-unknown-freebsd --verbose
-      #    mv target/x86_64-unknown-freebsd/release/kenshi kenshi_freebsd_amd64
+      - name: Build binary
+        run: cargo build --verbose --release --target ${{ matrix.target }}
+        env:
+          RUST_BACKTRACE: 1
 
-      - name: "Build apple darwin x86_64"
+      - name: Strip binary (linux and macos)
+        if: matrix.build == 'linux' || matrix.build == 'macos'
+        run: strip "target/${{ matrix.target }}/release/kenshi"
+
+      - name: Build archive
+        shell: bash
         run: |
-          cargo build --release --target x86_64-apple-darwin --verbose
-          mv target/x86_64-apple-darwin/release/kenshi kenshi_macos_amd64
-      
-      # redb package build err
-      #- name: "Build i686-pc-windows-gnu"
-      #  run: |
-      #    cargo build --release --target i686-pc-windows-gnu --verbose
-      #    mv target/i686-pc-windows-gnu/release/kenshi kenshi_win_i686
-          
-      - name: "Build x86_64-pc-windows-gnu"
-        run: |
-          cargo build --release --target x86_64-pc-windows-gnu --verbose
-          mv target/x86_64-pc-windows-gnu/release/kenshi.exe ./bin/kenshi_win_amd64.exe
+          mkdir archive
+          cp LICENSE README.md archive/
+          cd archive
+          if [ "${{ matrix.build }}" = "windows" ]; then
+            cp "../target/${{ matrix.target }}/release/kenshi.exe" ./
+            7z a "${{ matrix.archive-name }}" LICENSE README.md kenshi.exe
+          else
+            cp "../target/${{ matrix.target }}/release/kenshi" ./
+            tar -czf "${{ matrix.archive-name }}" LICENSE README.md kenshi
+          fi
           
       - name: Run UPX
         uses: crazy-max/ghaction-upx@v2
         with:
           version: latest
           files: |
-            ./bin/*
+            ./archive/*
           args: -fq
+            
+      - name: Upload archive
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ matrix.archive-name }}
+          path: archive/${{ matrix.archive-name }}
+          
           
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -81,5 +83,4 @@ jobs:
           prerelease: false
           title: "v0.01_20230725_3"
           files: |
-            ./bin/*
-            
+            ./archive/${{ matrix.archive-name }}
