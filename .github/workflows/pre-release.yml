@@ -26,6 +26,13 @@ jobs:
           rustup target add x86_64-unknown-linux-musl
           rustup target add i686-unknown-linux-gnu
           rustup target add x86_64-pc-windows-gnu
+          rustup target add x86_64-apple-darwin
+      
+      # Cross-compiling from Linux to Mac
+      - uses: mbround18/setup-osxcross@v1
+        # This builds executables & sets env variables for rust to consume.
+        with:
+          osx-version: "12.3"
           
       - name: "Build Linux x86_64 amd"
         run: |
@@ -43,10 +50,10 @@ jobs:
       #    cargo build --release --target x86_64-unknown-freebsd --verbose
       #    mv target/x86_64-unknown-freebsd/release/kenshi kenshi_freebsd_amd64
 
-      #- name: "Build apple darwin x86_64"
-      #  run: |
-      #    cargo build --release --target x86_64-apple-darwin --verbose
-      #    mv target/x86_64-apple-darwin/release/kenshi kenshi_macos_amd64
+      - name: "Build apple darwin x86_64"
+        run: |
+          cargo build --release --target x86_64-apple-darwin --verbose
+          mv target/x86_64-apple-darwin/release/kenshi kenshi_macos_amd64
       
       # redb package build err
       #- name: "Build i686-pc-windows-gnu"
