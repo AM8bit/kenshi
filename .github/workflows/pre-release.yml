@@ -37,7 +37,12 @@ jobs:
           profile: minimal
           override: true
           target: ${{ matrix.target }}
-
+          
+      - name: Install deps
+        if: matrix.build == 'linux'
+        run: |
+          sudo apt-get install musl musl-tools gcc-multilib -y
+          
       - name: Build binary
         run: cargo build --verbose --release --target ${{ matrix.target }}
         env:
@@ -47,6 +52,24 @@ jobs:
         if: matrix.build == 'linux' || matrix.build == 'macos'
         run: strip "target/${{ matrix.target }}/release/kenshi"
 
+      - name: Run UPX linux
+        if: matrix.build == 'linux' || matrix.build == 'macos'
+        uses: crazy-max/ghaction-upx@v2
+        with:
+          version: latest
+          files: |
+            target/${{ matrix.target }}/release/kenshi
+          args: -fq
+          
+      - name: Run UPX windows
+        if: matrix.build == 'windows'
+        uses: crazy-max/ghaction-upx@v2
+        with:
+          version: latest
+          files: |
+            target/${{ matrix.target }}/release/kenshi.exe
+          args: -fq
+          
       - name: Build archive
         shell: bash
         run: |
@@ -60,14 +83,6 @@ jobs:
             cp "../target/${{ matrix.target }}/release/kenshi" ./
             tar -czf "${{ matrix.archive-name }}" LICENSE README.md kenshi
           fi
-          
-      - name: Run UPX
-        uses: crazy-max/ghaction-upx@v2
-        with:
-          version: latest
-          files: |
-            ./archive/*
-          args: -fq
             
       - name: Upload archive
         uses: actions/upload-artifact@v1
