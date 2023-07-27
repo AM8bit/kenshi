@@ -109,7 +109,7 @@ Options:
 ### examples
 
 #### Basic Scan
-- `kenshi -u https://FUZZ/robots.txt -w fuzz.dict`
+- `kenshi -u https://example.com/FUZZ -w fuzz.dict`
 #### Match page string
 - `kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mr "test_str[\d]{0,5}"`
 #### Match status code
