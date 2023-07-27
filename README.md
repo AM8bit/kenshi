@@ -115,6 +115,11 @@ Options:
 - `kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mc 200,403`
 #### Replace %EXT%, scanning for specified extensions (compatible with dirsearch -e)
 - `kenshi -u https://example.com/FUZZ -w fuzz.dict -D -e php,json,conf --mc 200`
+#### Maximum number of follow redirects
+- `kenshi -u https://example.com/FUZZ -w fuzz.dict --mc 200 --follow-redirect 2`
+#### Receive stdin wordlist
+- `cat fuzz.dict | kenshi -u https://example.com/FUZZ`
+
 
 ### Scanning results
 - Currently only support text format, the structure is very simple, each line a hit url, no more information.
