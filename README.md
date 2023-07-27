@@ -121,9 +121,11 @@ Options:
 #### Receive stdin wordlist
 - `cat fuzz.dict | kenshi -u https://example.com/FUZZ`
 #### Configuring the request proxy (offensive scanning)
-- `kenshi -u https://example.com/FUZZ -D -e zip -x http://12.12.12.12:1080 -U pwn:123123 -c 1000`
-  
+- `kenshi -u https://example.com/FUZZ -D -e zip -w fuzz.dict -x http://12.12.12.12:1080 -U pwn:123123 -c 1000`
 
+#### Exclude Scanning
+- `kenshi -u https://example.com/FUZZ -w fuzz.dict --fl 10 --mc 200 --mr test_str`
+- `kenshi -u https://example.com/FUZZ -w fuzz.dict --fc 403,404,500,400`
 
 ### Scanning results
 - Currently only support text format, the structure is very simple, each line a hit url, no more information.
