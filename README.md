@@ -108,7 +108,8 @@ Options:
 
 ### examples
 
-
+#### Basic Scan
+- `kenshi -u https://FUZZ/robots.txt -w fuzz.dict`
 #### Match page string
 - `kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mr "test_str[\d]{0,5}"`
 #### Match status code
@@ -119,6 +120,9 @@ Options:
 - `kenshi -u https://example.com/FUZZ -w fuzz.dict --mc 200 --follow-redirect 2`
 #### Receive stdin wordlist
 - `cat fuzz.dict | kenshi -u https://example.com/FUZZ`
+#### Configuring the request proxy (offensive scanning)
+- `kenshi -u https://example.com/FUZZ -D -e zip -x http://12.12.12.12:1080 -U pwn:123123 -c 1000`
+  
 
 
 ### Scanning results
