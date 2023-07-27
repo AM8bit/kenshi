@@ -16,7 +16,7 @@ It is currently in its infancy
 ## Experimental planning:
 - [ ] Try to use lua/python to implement modular customized scanning (e.g. sql injection detection, data extraction, sqlmap linkage...)
 - [ ] Polling read unbounded wordlist
-- [ ] dns preheat, avoid dns parsing errors.
+- [ ] dns preheat, avoiding dns record resolution failures
 
 **Suggestions are always welcome**
 
