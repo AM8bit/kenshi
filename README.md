@@ -110,7 +110,7 @@ Options:
 
 
 #### Match page string
-- `kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mr test_str`
+- `kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mr "test_str[\d]{0,5}"`
 #### Match status code
 - `kenshi -u https://FUZZ/robots.txt -w fuzz.dict --mc 200,403`
 #### Replace %EXT%, scanning for specified extensions (compatible with dirsearch -e)
