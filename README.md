@@ -13,6 +13,13 @@ It is currently in its infancy
 - [x] Reduced DNS resolution failures
 - [x] And...
 
+## Experimental planning:
+- [ ] Try to use lua/python to implement modular customized scanning (e.g. sql injection detection, data extraction, sqlmap linkage...)
+- [ ] Polling read unbounded wordlist
+- [ ] dns preheat, avoid dns parsing errors.
+
+**Suggestions are always welcome**
+
 ## Notes on usage
 
 We need to care about the meaning of the following parameters
