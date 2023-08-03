@@ -1,8 +1,7 @@
-use std::{fs};
-use regex::Regex;
-use crate::data_type::{Matches, MatchResult, HttpResp};
+use std::fs;
+use crate::data_type::{FilterRules, Matches};
 
-pub const COMMON_USER_AGENTS : [&str; 4] = [
+pub const COMMON_USER_AGENTS: [&str; 4] = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Linux; Android 10; Redmi Note 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Mobile Safari/537.36",
@@ -51,79 +50,127 @@ pub const DEFAULT_DNS_SERVERS: [&str; 39] = [
     "119.28.28.28",
 ];
 
-pub async fn dns_test() {
-    // test hosts 53 port open
-}
-
 pub fn file_exists(filename: &str) -> bool {
     fs::metadata(filename).is_ok()
 }
 
-pub fn  opt_int_parm(name: &str, matches: &getopts::Matches, default: usize)-> usize {
-    if let Some(s) = matches.opt_str(name) { 
-        if let Ok(u) = s.parse::<usize>() {
-            return u
-        }
-    }
-    default
-}
-
-pub fn  opt_int_some_parm(name: &str, matches: &getopts::Matches)-> Option<usize> {
-    if let Some(s) = matches.opt_str(name) {
-        if let Ok(u) = s.parse::<usize>() {
-            return Some(u)
-        }
-    }
-    None
-}
-
-pub fn  opt_int_some_parm2<T>(name: &str, matches: &getopts::Matches)-> Option<T> {
-    if let Some(s) = matches.opt_str(name) {
-        if let Ok(u) = s.parse::<usize>() {
-            let u = u as u8;
-           // return Some(u)
-        }
-    }
-    None
-}
-
-
-pub fn is_match(resp: &HttpResp, matches: &Matches) -> Option<MatchResult> {
-    let html = &resp.html;
-    let html = String::from_utf8(html.to_vec());
-    if html.is_err() {
-        return None
-    }
-    let html = html.unwrap();
-    let mut is_match = false;
+pub fn is_match(raw_str: &str, matches: &Matches) -> bool {
+    let html = raw_str;
+    let mut is_match = true;
+    let mut or_or_or = 0u8;
     // status code match
+    /*
     if matches.status_code.contains(&resp.status) {
         is_match = true
     } else {
         return None
     }
+     */
+
     // regex match
     if let Some(regex) = &matches.regex {
-        let re = Regex::new(regex).unwrap();
-        is_match = re.is_match(&html) && is_match;
+        let n = regex.is_match(&html);
+        is_match = n && is_match;
+        n.then(||{ or_or_or += 1});
     }
     // line match
     if let Some(n) = &matches.line_num {
-        is_match = html.lines().count().eq(n) && is_match
+        let n = html.lines().count().eq(n);
+        is_match = n && is_match;
+        n.then(||{ or_or_or += 1});
     }
 
     // response size
     if let Some(n) = &matches.resp_size {
-        is_match = html.len().eq(n) && is_match
+        let n = html.len().eq(n);
+        is_match = n && is_match;
+        n.then(||{ or_or_or += 1});
     }
 
-    if is_match {
-        return Some(MatchResult{
-            url: resp.url.to_string()
-        })
+    if !matches.and_and_and && or_or_or.gt(&0) {
+        is_match = true
     }
-    None
+    if is_match {
+        return true
+    }
+    false
 }
+
+pub fn is_filter(raw_str: &str, matches: &FilterRules) -> bool {
+    let html = raw_str;
+    let mut is_filter = true;
+    let mut or_or_or = 0u8;
+    // status code match
+    /*
+    if matches.status_code.contains(&resp.status) {
+        is_match = true
+    } else {
+        return None
+    }
+     */
+
+    // regex match
+    if let Some(regex) = &matches.regex {
+        let n = regex.is_match(&html);
+        is_filter = n && is_filter;
+        n.then(||{ or_or_or += 1});
+    }
+    // line match
+    if let Some(n) = &matches.line_num {
+        let n = html.lines().count().eq(n);
+        is_filter = n && is_filter;
+        n.then(||{ or_or_or += 1});
+    }
+
+    // response size
+    if let Some(n) = &matches.resp_size {
+        let n = html.len().eq(n);
+        is_filter = n && is_filter;
+        n.then(||{ or_or_or += 1});
+    }
+
+    if !matches.and_and_and && or_or_or.gt(&0) {
+        is_filter = true
+    }
+    is_filter
+}
+
+/*
+pub fn is_filter(resp: &HttpResp, matches: &FilterRules) -> bool {
+    let html = &resp.html;
+    let html = String::from_utf8(html.to_vec());
+    if html.is_err() {
+        return true;
+    }
+
+    let html = html.unwrap();
+    let mut is_filter = true;
+    // status code match
+    /*
+    if matches.status_code.contains(&resp.status) {
+        is_match = true
+    } else {
+        return None
+    }
+     */
+    // regex match
+    if let Some(regex) = &matches.regex {
+        is_filter = regex.is_match(&html) && is_filter;
+    }
+    // line match
+    if let Some(n) = &matches.line_num {
+        is_filter = html.lines().count().eq(n) && is_filter
+    }
+
+    // response size
+    if let Some(n) = &matches.resp_size {
+        is_filter = html.len().eq(n) && is_filter
+    }
+
+    is_filter
+}
+
+ */
 
 pub fn bytes_to_gb(bytes: u64) -> f64 {
     let gb = bytes as f64 / (1024.0 * 1024.0 * 1024.0);

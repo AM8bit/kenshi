@@ -1,0 +1,17 @@
+start = function(body)
+    local pattern = "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+"
+    local emails = {}
+    for email in string.gmatch(body, pattern) do
+        table.insert(emails, email)
+    end
+    local output = ""
+    for i, email in ipairs(emails) do
+        output = output .. email .. ","
+    end
+    if string.len(output) == 0 then
+        return ""
+    else
+        return string.sub(output, 1, #output - 1)
+    end
+
+end

@@ -14,16 +14,16 @@ jobs:
         include:
           - build: linux
             os: ubuntu-latest
-            rust: nightly
+            rust: 1.67.0
             target: x86_64-unknown-linux-musl
             archive-name: kenshi-linux-amd64.tar.gz
           - build: macos
             os: macos-latest
-            rust: nightly
+            rust: 1.67.0
             target: x86_64-apple-darwin
             archive-name: kenshi-macos-amd64.tar.gz
           - build: windows
-            os: windows-2019
+            os: 1.67.0
             rust: nightly-x86_64-msvc
             target: x86_64-pc-windows-msvc
             archive-name: kenshi-windows-amd64.7z

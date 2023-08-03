@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod parameter_test {
-    use std::fs::{remove_file, write};
     use crate::parse_args;
 
     #[test]
@@ -25,7 +24,7 @@ mod parameter_test {
         assert!(parse_args(&args).is_err());
         let args = vec!["program".to_string(), "-u".to_string(), "http://test.xxx/FUZZ".to_string(),
                         "-w".to_string(), "xxxx".to_string()];
-        //dbg!(&parse_args(&args));
         assert!(parse_args(&args).is_err());
+        //dbg!(&parse_args(&args));
     }
 }

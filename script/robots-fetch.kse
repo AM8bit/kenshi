@@ -1,0 +1,23 @@
+start = function(body)
+    local paths = {}
+    for path in string.gmatch(body, "[Dd]isallow:%s*([/.%-_w]+)") do
+        table.insert(paths, path)
+    end
+
+    local output = ""
+    for i, path in ipairs(paths) do
+        output = output .. path .. "\n"
+    end
+
+    if string.len(output) == 0 then
+        return "ignore"
+    else
+        local file = io.open("robots_store.txt", "a")
+        if file then
+            file:write(output)
+            file:close()
+            return "complete"
+        end
+        return "fail to save"
+    end
+end

@@ -1,12 +1,10 @@
 use std::error::Error;
 
-
-
-use crate::data_type::Stats;
-use crate::G_STATS;
 use hyper::Error as hyper_error;
 use trust_dns_resolver::error::ResolveError;
 
+use crate::data_type::Stats;
+use crate::G_STATS;
 
 pub fn stats_inc(stat: &Stats) {
     let mut value = G_STATS.get_mut(stat).unwrap();
@@ -16,7 +14,7 @@ pub fn stats_inc(stat: &Stats) {
 pub fn stats_err_inc(e: &reqwest::Error) {
     if e.is_timeout() {
         stats_inc(&Stats::TimeOut);
-        return
+        return;
     }
 
     if let Some(hyper_err) = e.source() {
@@ -27,7 +25,7 @@ pub fn stats_err_inc(e: &reqwest::Error) {
                     if let Some(resolve_err) = resolve_err {
                         if let trust_dns_resolver::error::ResolveErrorKind::NoRecordsFound { .. } = resolve_err.kind() {
                             stats_inc(&Stats::DNSErr);
-                            return
+                            return;
                         }
                     }
                 }
