@@ -23,8 +23,8 @@ jobs:
             target: x86_64-apple-darwin
             archive-name: kenshi-macos-amd64.tar.gz
           - build: windows
-            os: 1.67.0
-            rust: nightly-x86_64-msvc
+            os: windows-2019
+            rust: 1.67.0
             target: x86_64-pc-windows-msvc
             archive-name: kenshi-windows-amd64.7z
       fail-fast: false
