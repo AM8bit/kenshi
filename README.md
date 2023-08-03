@@ -127,24 +127,25 @@ Options:
     -w, --wordlist FILE required. Wordlist file path and (optional) keyword
                         separated by colon. eg. '/path/to/wordlist:KEYWORD'
     -o, --output FILE   Output result
+        --or-match      Any one of these hits will do. (default: and)
         --mc            Match HTTP status codes, or "all" for everything.
-                        (default: 200,403)
+                        (default: 200,403,401,500)
         --mr regexp     Match regexp
         --ms length     Match HTTP response size
         --ml int        Match amount of lines in response
+        --or-filter     Any one of these hits will do. (default: and)
         --fc regexp     Filter HTTP status codes from response. Comma
                         separated list of codes and ranges
         --fl            Filter by amount of lines in response. Comma separated
                         list of line counts and ranges
-        --fmode         Filter set operator. Either of: and, or (default: or)
         --fr            Filter regexp
         --fs            Filter HTTP response size. Comma separated list of
                         sizes and ranges
         --rt Int        request timeout
-    -c, --concurrent 100
+    -c, --concurrent 1000
                         Number of concurrent requests
         --follow-redirect INT
-                        enable redirect 301/302, default is false,
+                        enable redirect 301/302, default is 0,
     -r, --retrie 1      Number of failed retry requests
     -x, --proxy socks5://1.1.1.1:1080
                         proxy request, http/https/socks5
@@ -154,9 +155,12 @@ Options:
                         in conjunction with -e flag. (default: false)
     -e, --ext           Comma separated list of extensions. Extends FUZZ
                         keyword.
+    -s, --script        lua script(This is an experimental feature)
         --silent        silent mode
     -v, --stats         Display detailed scanning status
+        --vv            show version
     -h, --help          print this help menu
+
 ```
 
 ### examples
