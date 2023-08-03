@@ -44,7 +44,7 @@ jobs:
       - name: Install deps
         if: matrix.build == 'linux'
         run: |
-          sudo apt-get install musl musl-tools gcc-multilib -y
+          sudo apt update && sudo apt-get install musl musl-tools gcc-multilib -y
           
       - name: Build binary
         run: cargo build --verbose --release --target ${{ matrix.target }}
