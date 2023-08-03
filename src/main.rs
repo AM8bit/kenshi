@@ -320,9 +320,11 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
 
     // other
     let mut no_color = false;
+    /*
     if matches.opt_present("no-color") {
         no_color = true;
     }
+     */
     // scan state
     let mut scan_mode = ScanMode::Debug;
 
