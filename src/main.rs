@@ -128,7 +128,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     opts.optopt("", "fc", "Filter HTTP status codes from response. Comma separated list of codes and ranges", "regexp");
     opts.optopt("", "fl", "Filter by amount of lines in response. Comma separated list of line counts and ranges. eg. --fl 123,1234 ", "");
     opts.optopt("", "fr", r#"Filter regexp"#, "");
-    opts.optopt("", "fs", r#"Filter HTTP response size. Comma separated list of sizes and ranges. eg. --fs "<100,>1000""#, "");
+    opts.optopt("", "fs", r#"Filter HTTP response size. Comma separated list of sizes and ranges. eg. --fs "<100,>1000,10-50""#, "");
 
     // scan
     opts.optopt("", "rt", "request timeout", "Int");

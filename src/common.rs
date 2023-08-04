@@ -127,22 +127,40 @@ pub fn is_filter(raw_str: &str, matches: &FilterRules) -> bool {
         let resp_size = html.len();
         let mut ret = false;
         for v in list.iter() {
-            let size_str: String = v.chars()
-                .filter(|c| c.is_numeric())
-                .collect();
-            let mut filter_size = 0usize;
-            if let Ok(u) = size_str.parse::<usize>() {
-                filter_size = u
+            let range_str: Vec<&str> = v.split('-').collect();
+            if range_str.len().eq(&2) {
+                let mut start = 0;
+                let mut end = 0;
+                if let Ok(u) = range_str.first().unwrap().parse::<usize>() {
+                    start = u
+                }else {
+                    continue
+                }
+                if let Ok(u) = range_str.last().unwrap().parse::<usize>() {
+                    end = u
+                }else {
+                    continue
+                }
+                ret = resp_size >= start && resp_size <= end;
             }else {
-                continue
+                let size_str: String = v.chars()
+                    .filter(|c| c.is_numeric())
+                    .collect();
+                let mut filter_size = 0usize;
+                if let Ok(u) = size_str.parse::<usize>() {
+                    filter_size = u
+                }else {
+                    continue
+                }
+                if v.contains('>') {
+                    ret = resp_size.gt(&filter_size);
+                }else if v.contains('<') {
+                    ret = resp_size.lt(&filter_size);
+                }else {
+                    ret = resp_size.eq(&filter_size);
+                }
             }
-            if v.contains('>') {
-                ret = resp_size.gt(&filter_size);
-            }else if v.contains('<') {
-                ret = resp_size.lt(&filter_size);
-            }else {
-                ret = resp_size.eq(&filter_size);
-            }
+
         }
         is_filter = ret && is_filter;
         ret.then(||{ or_or_or += 1});
