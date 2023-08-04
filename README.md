@@ -125,7 +125,7 @@ Usage: ./kenshi [options]
 Options:
     -u, --url URL       required. Test url
     -w, --wordlist FILE required. Wordlist file path and (optional) keyword
-                        separated by colon. eg. '/path/to/wordlist:KEYWORD'
+                        separated by colon. eg. '/path/to/wordlist'
     -o, --output FILE   Output result
         --or-match      Any one of these hits will do. (default: and)
         --mc            Match HTTP status codes, or "all" for everything.
@@ -137,10 +137,10 @@ Options:
         --fc regexp     Filter HTTP status codes from response. Comma
                         separated list of codes and ranges
         --fl            Filter by amount of lines in response. Comma separated
-                        list of line counts and ranges
+                        list of line counts and ranges. eg. --fl 123,1234
         --fr            Filter regexp
         --fs            Filter HTTP response size. Comma separated list of
-                        sizes and ranges
+                        sizes and ranges. eg. --fs "<100,>1000"
         --rt Int        request timeout
     -c, --concurrent 1000
                         Number of concurrent requests
@@ -160,6 +160,7 @@ Options:
     -v, --stats         Display detailed scanning status
         --vv            show version
     -h, --help          print this help menu
+
 
 ```
 
