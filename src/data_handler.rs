@@ -143,7 +143,6 @@ impl ListenData {
                         }
                         resp = read_guard.dequeue();
                     }
-
                     if resp.is_none() {
                         thread::sleep(Duration::from_millis(1));
                         continue;
@@ -171,7 +170,6 @@ impl ListenData {
                         print_data.url = url.clone();
                         msg_sender.debug(print_data);
                     }
-
                     // filter response body
                     if let Some(filters) = &custom_filters {
                         if is_filter(&html, filters) {
@@ -203,8 +201,16 @@ impl ListenData {
                     }
 
                     if scan_mode == ScanMode::Debug {
-                        let green = Style::new().green().bold();
-                        msg_sender.send_color(green);
+                        let color = match &resp.status {
+                            200 => Style::new().green().bold(),
+                            404 => Style::new().dim().bold(),
+                            403 => Style::new().yellow().bold(),
+                            500 => Style::new().red().bold(),
+                            400 => Style::new().dim().bold(),
+                            401 => Style::new().blue().bold(),
+                            _ => Style::new().cyan().bold(),
+                        };
+                        msg_sender.send_color(color);
                     } else {
                         msg_sender.set_msg(url.to_string()).send();
                     }
