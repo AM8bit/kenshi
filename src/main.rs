@@ -112,7 +112,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     let mut opts = Options::new();
     // basic
     opts.optopt("u", "url", "required. Test url", "URL");
-    opts.optopt("w", "wordlist", "required. Wordlist file path and (optional) keyword separated by colon. eg. '/path/to/wordlist:KEYWORD'", "FILE");
+    opts.optopt("w", "wordlist", "required. Wordlist file path and (optional) keyword separated by colon. eg. '/path/to/wordlist'", "FILE");
     opts.optopt("o", "output", "Output result", "FILE");
 
     // match option
@@ -126,9 +126,9 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     // filter option
     opts.optflag("", "or-filter", r#"Any one of these hits will do. (default: and)"#);
     opts.optopt("", "fc", "Filter HTTP status codes from response. Comma separated list of codes and ranges", "regexp");
-    opts.optopt("", "fl", "Filter by amount of lines in response. Comma separated list of line counts and ranges", "");
+    opts.optopt("", "fl", "Filter by amount of lines in response. Comma separated list of line counts and ranges. eg. --fl 123,1234 ", "");
     opts.optopt("", "fr", r#"Filter regexp"#, "");
-    opts.optopt("", "fs", r#"Filter HTTP response size. Comma separated list of sizes and ranges"#, "");
+    opts.optopt("", "fs", r#"Filter HTTP response size. Comma separated list of sizes and ranges. eg. --fs "<100,>1000""#, "");
 
     // scan
     opts.optopt("", "rt", "request timeout", "Int");

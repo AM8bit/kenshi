@@ -174,7 +174,7 @@ impl ListenData {
                     if let Some(filters) = &custom_filters {
                         if is_filter(&html, filters) {
                             if scan_mode == ScanMode::Debug {
-                                msg_sender.send_color(Style::new().red().bold());
+                                //msg_sender.send_color(Style::new().red().bold());
                             }
                             continue
                         }

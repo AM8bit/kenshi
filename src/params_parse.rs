@@ -21,6 +21,33 @@ pub fn opt_int_some_parm(name: &str, matches: &getopts::Matches) -> Option<usize
     None
 }
 
+pub fn opt_usize_split(name: &str, defaults: &str, matches: &getopts::Matches) -> Option<HashSet<usize>> {
+    let mut codes: HashSet<usize> = HashSet::new();
+    match matches.opt_str(name) {
+        Some(s) => {
+            let split: Vec<&str> = s.split(',').collect();
+            for code in split {
+                if let Ok(u) = code.parse::<usize>() {
+                    codes.insert(u);
+                }
+            }
+            Some(codes)
+        }
+        None => {
+            if defaults.is_empty() {
+                return None
+            }
+            let split: Vec<&str> = defaults.split(',').collect();
+            for code in split {
+                if let Ok(u) = code.parse::<usize>() {
+                    codes.insert(u);
+                }
+            }
+            Some(codes)
+        }
+    }
+}
+
 pub fn opt_int_split(name: &str, defaults: &str, matches: &getopts::Matches) -> Option<HashSet<u16>> {
     let mut codes: HashSet<u16> = HashSet::new();
     match matches.opt_str(name) {
@@ -50,6 +77,17 @@ pub fn opt_int_split(name: &str, defaults: &str, matches: &getopts::Matches) -> 
     }
 }
 
+pub fn opt_vec_split(name: &str, matches: &getopts::Matches) -> Option<Vec<String>> {
+    let mut list: Vec<String> = Vec::new();
+    match matches.opt_str(name) {
+        Some(s) => {
+            list = s.split(',').map(|v| { v.trim().to_string() }).collect();
+            Some(list)
+        }
+        None => None
+    }
+}
+
 pub fn filter_params(matches: &getopts::Matches) -> Result<Option<FilterRules>, String> {
     let filter_resp_regex = match matches.opt_str("fr") {
         Some(r) => {
@@ -63,8 +101,9 @@ pub fn filter_params(matches: &getopts::Matches) -> Result<Option<FilterRules>, 
         None => None
     };
     let filter_http_status_code = opt_int_split("fc","", matches);
-    let filter_resp_line = opt_int_some_parm("fl", matches);
-    let filter_resp_size = opt_int_some_parm("fs", matches);
+    let filter_resp_line = opt_usize_split("fl", "", matches);
+
+    let filter_resp_size = opt_vec_split("fs", matches);
     // empty
     if filter_resp_regex.is_none() && filter_http_status_code.is_none() &&
         filter_resp_line.is_none() && filter_resp_size.is_none() {

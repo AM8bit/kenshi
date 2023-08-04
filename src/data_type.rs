@@ -56,8 +56,8 @@ pub struct Matches {
 pub struct FilterRules {
     pub regex: Option<Regex>,
     pub status_code: Option<HashSet<u16>>,
-    pub line_num: Option<usize>,
-    pub resp_size: Option<usize>,
+    pub line_num: Option<HashSet<usize>>,
+    pub resp_size: Option<Vec<String>>,
     pub and_and_and: bool,
 }
 

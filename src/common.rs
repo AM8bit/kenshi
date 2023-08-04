@@ -116,17 +116,36 @@ pub fn is_filter(raw_str: &str, matches: &FilterRules) -> bool {
         n.then(||{ or_or_or += 1});
     }
     // line match
-    if let Some(n) = &matches.line_num {
-        let n = html.lines().count().eq(n);
-        is_filter = n && is_filter;
-        n.then(||{ or_or_or += 1});
+    if let Some(fls) = &matches.line_num {
+        let ret = fls.contains(&html.lines().count());
+        is_filter = ret && is_filter;
+        ret.then(||{ or_or_or += 1});
     }
 
     // response size
-    if let Some(n) = &matches.resp_size {
-        let n = html.len().eq(n);
-        is_filter = n && is_filter;
-        n.then(||{ or_or_or += 1});
+    if let Some(list) = &matches.resp_size {
+        let resp_size = html.len();
+        let mut ret = false;
+        for v in list.iter() {
+            let size_str: String = v.chars()
+                .filter(|c| c.is_numeric())
+                .collect();
+            let mut filter_size = 0usize;
+            if let Ok(u) = size_str.parse::<usize>() {
+                filter_size = u
+            }else {
+                continue
+            }
+            if v.contains('>') {
+                ret = resp_size.gt(&filter_size);
+            }else if v.contains('<') {
+                ret = resp_size.lt(&filter_size);
+            }else {
+                ret = resp_size.eq(&filter_size);
+            }
+        }
+        is_filter = ret && is_filter;
+        ret.then(||{ or_or_or += 1});
     }
 
     if !matches.and_and_and && or_or_or.gt(&0) {
