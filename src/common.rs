@@ -142,6 +142,9 @@ pub fn is_filter(raw_str: &str, matches: &FilterRules) -> bool {
                     continue
                 }
                 ret = resp_size >= start && resp_size <= end;
+                if ret {
+                    break
+                }
             }else {
                 let size_str: String = v.chars()
                     .filter(|c| c.is_numeric())
@@ -158,6 +161,9 @@ pub fn is_filter(raw_str: &str, matches: &FilterRules) -> bool {
                     ret = resp_size.lt(&filter_size);
                 }else {
                     ret = resp_size.eq(&filter_size);
+                }
+                if ret {
+                    break
                 }
             }
 
