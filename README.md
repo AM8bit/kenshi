@@ -140,7 +140,7 @@ Options:
                         list of line counts and ranges. eg. --fl 123,1234
         --fr            Filter regexp
         --fs            Filter HTTP response size. Comma separated list of
-                        sizes and ranges. eg. --fs "<100,>1000"
+                        sizes and ranges. eg. --fs "<100,>1000,10-50"
         --rt Int        request timeout
     -c, --concurrent 1000
                         Number of concurrent requests
@@ -160,7 +160,6 @@ Options:
     -v, --stats         Display detailed scanning status
         --vv            show version
     -h, --help          print this help menu
-
 
 ```
 
