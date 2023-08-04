@@ -82,6 +82,7 @@ lazy_static! {
 }
 
 const G_DEFAULT_FILE_DESC_LIMIT: u64 = 65535;
+const G_DEFAULT_CONCURRENT_NUM: u32 = 1000;
 const G_DEFAULT_MATCHES_STATUS_CODE: &str = "200,403,401,500";
 const G_DEFAULT_LOGFILE: &str = "kenshi.log";
 pub const VERSION: &str = "v0.1.2";
@@ -111,30 +112,30 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     let program = args[0].clone();
     let mut opts = Options::new();
     // basic
-    opts.optopt("u", "url", "required. Test url", "URL");
-    opts.optopt("w", "wordlist", "required. Wordlist file path and (optional) keyword separated by colon. eg. '/path/to/wordlist'", "FILE");
-    opts.optopt("o", "output", "Output result", "FILE");
+    opts.optopt("u", "url", "required. Test url", "<url>");
+    opts.optopt("w", "wordlist", "required. Wordlist file path. eg. '/path/to/wordlist'", "<file>");
+    opts.optopt("o", "output", "Output result", "<file>");
 
     // match option
     opts.optflag("", "or-match", r#"Any one of these hits will do. (default: and)"#);
-    opts.optopt("", "mc", &format!("Match HTTP status codes, or \"all\" for everything. (default: {G_DEFAULT_MATCHES_STATUS_CODE})"), "");
-    opts.optopt("", "mr", "Match regexp", "regexp");
-    opts.optopt("", "ms", r#"Match HTTP response size"#, "length");
-    opts.optopt("", "ml", r#"Match amount of lines in response"#, "int");
+    opts.optopt("", "mc", "Match HTTP status codes, or \"all\" for everything.", &format!("<{G_DEFAULT_MATCHES_STATUS_CODE}>"));
+    opts.optopt("", "mr", "Match regexp", "<regexp>");
+    opts.optopt("", "ms", r#"Match HTTP response size"#, "<int>");
+    opts.optopt("", "ml", r#"Match amount of lines in response"#, "<int>");
     //opts.optopt("", "mt", "Match how many milliseconds to the first response byte, either greater or less than. EG: >100 or <100", "");
 
     // filter option
     opts.optflag("", "or-filter", r#"Any one of these hits will do. (default: and)"#);
-    opts.optopt("", "fc", "Filter HTTP status codes from response. Comma separated list of codes and ranges", "regexp");
-    opts.optopt("", "fl", "Filter by amount of lines in response. Comma separated list of line counts and ranges. eg. --fl 123,1234 ", "");
-    opts.optopt("", "fr", r#"Filter regexp"#, "");
-    opts.optopt("", "fs", r#"Filter HTTP response size. Comma separated list of sizes and ranges. eg. --fs "<100,>1000,10-50""#, "");
+    opts.optopt("", "fc", "Filter HTTP status codes from response. Comma separated list of codes and ranges", "<int,...>");
+    opts.optopt("", "fl", "Filter by amount of lines in response. Comma separated list of line counts and ranges. eg. --fl 123,1234 ", "<int,...>");
+    opts.optopt("", "fr", r#"Filter regexp"#, "<regexp>");
+    opts.optopt("", "fs", r#"Filter HTTP response size. Comma separated list of sizes and ranges. eg. --fs "<100,>1000,10-50""#, "<rules...>");
 
     // scan
-    opts.optopt("", "rt", "request timeout", "Int");
-    opts.optopt("c", "concurrent", "Number of concurrent requests", "1000");
-    opts.optopt("", "follow-redirect", "enable redirect 301/302, default is 0,", "INT");
-    opts.optopt("r", "retrie", "Number of failed retry requests", "1");
+    opts.optopt("", "rt", "Request timeout seconds", "<int>");
+    opts.optopt("c", "concurrent", &format!("Number of concurrent requests. default: {G_DEFAULT_CONCURRENT_NUM}"), "<int>");
+    opts.optopt("", "follow-redirect", "enable redirect 301/302. disabled by default", "<int>");
+    opts.optopt("r", "retries", "Number of failed retry requests", "<int>");
 
     // http option
     /*
@@ -146,8 +147,8 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     opts.optopt("", "no-color", "I like black and white.", "socks5://1.1.1.1:1080");
      */
 
-    opts.optopt("x", "proxy", "proxy request, http/https/socks5", "socks5://1.1.1.1:1080");
-    opts.optopt("U", "auth", "proxy auth, if required", "username:password");
+    opts.optopt("x", "proxy", "proxy request, http/https/socks5", "<socks5://1.1.1.1:1080>");
+    opts.optopt("U", "auth", "proxy auth, if required", "<username:password>");
     //opts.optflag("", "clear", "cache Clear");
     // dirsearch
     opts.optflag("D", "", "Replace wordlist %EXT% keywords with extension. Used in conjunction with -e flag. (default: false)");
@@ -223,7 +224,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     }
 
     let request_retries = opt_int_parm("r", &matches, 1);
-    let mut concurrent_num = opt_int_parm("c", &matches, 100);
+    let mut concurrent_num = opt_int_parm("c", &matches, G_DEFAULT_CONCURRENT_NUM as usize);
     let ulimit = concurrent_num as u64 * 2;
 
     #[cfg(unix)]
