@@ -1,6 +1,6 @@
 start = function(body)
     local paths = {}
-    for path in string.gmatch(body, "[Dd]isallow:%s*([/.%-_w]+)") do
+    for path in string.gmatch(body, "[Dd]isallow:%s*([/.-_%w]+)") do
         table.insert(paths, path)
     end
 
