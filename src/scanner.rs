@@ -70,13 +70,12 @@ impl<'a> Scanner<'a> {
                                        &G_STATS.get(&Stats::C500).unwrap().to_owned(),
         ));
         let jobs_len = G_RESPONSE.read().unwrap().queue.len();
-        stats_bar.set_message(format!("Hits: {}, , Jobs: {}, TO: {}, IO: {}, DNS: {}, Mem: {}",
+        stats_bar.set_message(format!("Hits: {}, , Jobs: {}, TO: {}, IO: {}, DNS: {}",
                                       &G_STATS.get(&Stats::Hits).unwrap().to_owned(),
                                       jobs_len,
                                       &G_STATS.get(&Stats::TimeOut).unwrap().to_owned(),
                                       &G_STATS.get(&Stats::IOErr).unwrap().to_owned(),
                                       &G_STATS.get(&Stats::DNSErr).unwrap().to_owned(),
-                                      "60%"
         ));
         stats_bar.inc(1);
         status_bar.inc(1);
