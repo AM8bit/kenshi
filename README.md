@@ -120,36 +120,36 @@ The definition of [ffuf](https://github.com/ffuf/ffuf) has been adopted for some
 `kenshi -h`
 
 ```console
-Usage: ./kenshi [options]
+Usage: target/debug/kenshi [options]
 
 Options:
-    -u, --url URL       required. Test url
-    -w, --wordlist FILE required. Wordlist file path and (optional) keyword
-                        separated by colon. eg. '/path/to/wordlist'
-    -o, --output FILE   Output result
+    -u, --url <url>     required. Test url
+    -w, --wordlist <file>
+                        required. Wordlist file path. eg. '/path/to/wordlist'
+    -o, --output <file> Output result
         --or-match      Any one of these hits will do. (default: and)
-        --mc            Match HTTP status codes, or "all" for everything.
-                        (default: 200,403,401,500)
-        --mr regexp     Match regexp
-        --ms length     Match HTTP response size
-        --ml int        Match amount of lines in response
+        --mc <200,403,401,500>
+                        Match HTTP status codes, or "all" for everything.
+        --mr <regexp>   Match regexp
+        --ms <int>      Match HTTP response size
+        --ml <int>      Match amount of lines in response
         --or-filter     Any one of these hits will do. (default: and)
-        --fc regexp     Filter HTTP status codes from response. Comma
+        --fc <int,...>  Filter HTTP status codes from response. Comma
                         separated list of codes and ranges
-        --fl            Filter by amount of lines in response. Comma separated
+        --fl <int,...>  Filter by amount of lines in response. Comma separated
                         list of line counts and ranges. eg. --fl 123,1234
-        --fr            Filter regexp
-        --fs            Filter HTTP response size. Comma separated list of
-                        sizes and ranges. eg. --fs "<100,>1000,10-50,1234"
-        --rt Int        request timeout
-    -c, --concurrent 1000
-                        Number of concurrent requests
-        --follow-redirect INT
-                        enable redirect 301/302, default is 0,
-    -r, --retrie 1      Number of failed retry requests
-    -x, --proxy socks5://1.1.1.1:1080
+        --fr <regexp>   Filter regexp
+        --fs <rules...> Filter HTTP response size. Comma separated list of
+                        sizes and ranges. eg. --fs "<100,>1000,10-50"
+        --rt <int>      Request timeout seconds
+    -c, --concurrent <int>
+                        Number of concurrent requests. default: 1000
+        --follow-redirect <int>
+                        enable redirect 301/302. disabled by default
+    -r, --retries <int> Number of failed retry requests
+    -x, --proxy <socks5://1.1.1.1:1080>
                         proxy request, http/https/socks5
-    -U, --auth username:password
+    -U, --auth <username:password>
                         proxy auth, if required
     -D                  Replace wordlist %EXT% keywords with extension. Used
                         in conjunction with -e flag. (default: false)
