@@ -107,7 +107,7 @@ pub fn is_filter(raw_str: &str, matches: &FilterRules) -> bool {
     } else {
         return None
     }
-     */
+    */
 
     // regex match
     if let Some(regex) = &matches.regex {
@@ -174,6 +174,8 @@ pub fn is_filter(raw_str: &str, matches: &FilterRules) -> bool {
 
     if !matches.and_and_and && or_or_or.gt(&0) {
         is_filter = true
+    }else if is_filter && or_or_or == 0 {
+        is_filter = false
     }
     is_filter
 }

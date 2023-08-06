@@ -85,6 +85,7 @@ pub struct ListenData {
     print_sender: Sender<String>,
     mode: ScanMode,
     script: Option<ScriptOpt>,
+    result_outfile: Option<String>
 }
 
 impl ListenData {
@@ -94,6 +95,7 @@ impl ListenData {
             print_sender,
             mode,
             script: None,
+            result_outfile: None,
         }
     }
 
@@ -101,21 +103,33 @@ impl ListenData {
         self.script = Some(script);
     }
 
-    pub fn listen_data(&mut self, result_path: &str, custom_matches: Option<Matches>, custom_filters: Option<FilterRules>) {
+    pub fn save_as(&mut self, outfile: &str) {
+        self.result_outfile = Some(outfile.to_string())
+    }
+
+    pub fn listen_data(&mut self, custom_matches: Option<Matches>, custom_filters: Option<FilterRules>) {
         //jobs
-        let file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .open(result_path)
-            .unwrap();
-        let write_result = Arc::new(Mutex::new(file));
+        let file = match &self.result_outfile {
+            Some(p) => {
+                let  file = OpenOptions::new()
+                    .create(true)
+                    .write(true)
+                    .open(p)
+                    .unwrap();
+                Some(file)
+            }
+            _ => {
+                None
+            }
+        };
+
+        let outfile = Arc::new(Mutex::new(file));
         for _ in 0..4 {
             let response_cloned = G_RESPONSE.clone();
             let loop_break_cloned = G_LOOP_BREAK.clone();
             let custom_matches = custom_matches.clone();
             let custom_filters = custom_filters.clone();
-            let write_result = write_result.clone();
-            let result_path = result_path.to_owned();
+            let outfile = outfile.clone();
             let print_sender = self.print_sender.clone();
             let scan_mode = self.mode.clone();
             let script_opt = self.script.clone();
@@ -152,9 +166,11 @@ impl ListenData {
                     let url = resp.url.to_string();
                     let html = match String::from_utf8(resp.html.to_vec()) {
                         Ok(r) => r,
-                        Err(_) => continue,
+                        Err(e) => {
+                            log::warn!("{}", e.to_string());
+                            continue
+                        },
                     };
-
 
                     if scan_mode == ScanMode::Debug {
                         let mut print_data = PrintData::default();
@@ -179,7 +195,6 @@ impl ListenData {
                             continue
                         }
                     }
-
                     // match response body
                     if let Some(matches) = &custom_matches {
                         if !is_match(&html, matches) {
@@ -216,14 +231,14 @@ impl ListenData {
                     }
 
                     stats_inc(&Stats::Hits);
-                    if !result_path.is_empty() {
-                        let log_text = url.to_string() + "\n";
-                        let mut file = write_result.lock().unwrap();
-                        let write_str = log_text.to_string();
-                        file.write_all(write_str.as_bytes()).unwrap();
-                        file.flush().unwrap();
+                    let mut file = outfile.lock().unwrap();
+                    if let Some(ref mut file) = *file {
+                            let log_text = url.to_string() + "\n";
+                            let write_str = log_text.to_string();
+                            file.write_all(write_str.as_bytes()).unwrap();
+                            file.flush().unwrap();
+                        }
                     }
-                }
             });
             self.handles.push(handle)
         }

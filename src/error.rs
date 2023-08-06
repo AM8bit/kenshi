@@ -40,6 +40,7 @@ pub fn stats_err_inc(e: &reqwest::Error) {
 
 pub fn stats_code_inc(stat: &u16) {
     let code = match stat {
+        502 => &Stats::C502,
         500 => &Stats::C500,
         200 => &Stats::C200,
         404 => &Stats::C404,

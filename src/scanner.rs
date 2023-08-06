@@ -47,8 +47,8 @@ impl<'a> Scanner<'a> {
         pb.set_position(0);
         status_bar.set_position(0);
         stats_bar.set_position(0);
-        status_bar.set_message("200: Wait, 404: Wait, 301: Wait, 302: Wait, 403: Wait, 401: Wait, 500: Wait".to_string());
-        stats_bar.set_message("Hits: Wait, , Jobs: Wait, TO: Wait, IO: Wait, DNS: Wait, Mem: Wait".to_string());
+        status_bar.set_message("waiting...".to_string());
+        stats_bar.set_message("waiting...".to_string());
         if !self.options.params.print_state {
             status_bar.finish_and_clear();
             stats_bar.finish_and_clear();
@@ -60,22 +60,23 @@ impl<'a> Scanner<'a> {
         if !self.options.params.print_state {
             return;
         }
-        status_bar.set_message(format!("200: {}, 404: {}, 301: {}, 302: {}, 403: {}, 401: {}, 500: {}",
-                                       &G_STATS.get(&Stats::C200).unwrap().to_owned(),
-                                       &G_STATS.get(&Stats::C404).unwrap().to_owned(),
-                                       &G_STATS.get(&Stats::C301).unwrap().to_owned(),
-                                       &G_STATS.get(&Stats::C302).unwrap().to_owned(),
-                                       &G_STATS.get(&Stats::C403).unwrap().to_owned(),
-                                       &G_STATS.get(&Stats::C401).unwrap().to_owned(),
-                                       &G_STATS.get(&Stats::C500).unwrap().to_owned(),
+        status_bar.set_message(format!("200: {}, 404: {}, 301: {}, 302: {}, 403: {}, 401: {}, 500: {}, 502: {}",
+                                       &G_STATS.get(&Stats::C200).unwrap().to_string(),
+                                       &G_STATS.get(&Stats::C404).unwrap().to_string(),
+                                       &G_STATS.get(&Stats::C301).unwrap().to_string(),
+                                       &G_STATS.get(&Stats::C302).unwrap().to_string(),
+                                       &G_STATS.get(&Stats::C403).unwrap().to_string(),
+                                       &G_STATS.get(&Stats::C401).unwrap().to_string(),
+                                       &G_STATS.get(&Stats::C500).unwrap().to_string(),
+                                       &G_STATS.get(&Stats::C502).unwrap().to_string(),
         ));
         let jobs_len = G_RESPONSE.read().unwrap().queue.len();
         stats_bar.set_message(format!("Hits: {}, , Jobs: {}, TO: {}, IO: {}, DNS: {}",
-                                      &G_STATS.get(&Stats::Hits).unwrap().to_owned(),
+                                      &G_STATS.get(&Stats::Hits).unwrap().to_string(),
                                       jobs_len,
-                                      &G_STATS.get(&Stats::TimeOut).unwrap().to_owned(),
-                                      &G_STATS.get(&Stats::IOErr).unwrap().to_owned(),
-                                      &G_STATS.get(&Stats::DNSErr).unwrap().to_owned(),
+                                      &G_STATS.get(&Stats::TimeOut).unwrap().to_string(),
+                                      &G_STATS.get(&Stats::IOErr).unwrap().to_string(),
+                                      &G_STATS.get(&Stats::DNSErr).unwrap().to_string(),
         ));
         stats_bar.inc(1);
         status_bar.inc(1);
@@ -137,7 +138,10 @@ impl<'a> Scanner<'a> {
         }
         let matches = options.params.custom_matches.clone();
         let filters = options.params.custom_filters.clone();
-        listen_data.listen_data(&options.params.result_file, matches, filters);
+        listen_data.listen_data( matches, filters);
+        if let Some(p) =&options.params.result_file {
+            listen_data.save_as(p)
+        }
         let client = self.client_build();
         let client = match client {
             Some(c) => c,
@@ -177,15 +181,20 @@ impl<'a> Scanner<'a> {
                             }
                             let real_url = r.url().to_string();
                             let remote_addr = r.remote_addr();
-                            if let Ok(data) = &r.bytes().await {
-                                let duration = start.elapsed();
-                                return Some(HttpResp {
-                                    status,
-                                    url: real_url,
-                                    html: data.to_vec(),
-                                    duration,
-                                    remote_addr,//Real ip acquisition, needs some improvement
-                                });
+                            match &r.bytes().await {
+                                Ok(data) => {
+                                    let duration = start.elapsed();
+                                    return Some(HttpResp {
+                                        status,
+                                        url: real_url,
+                                        html: data.to_vec(),
+                                        duration,
+                                        remote_addr,//Real ip acquisition, needs some improvement
+                                    });
+                                }
+                                Err(e) => {
+                                    log::info!("{}", e.to_string());
+                                }
                             }
                         }
                         Err(e) => {
@@ -207,17 +216,22 @@ impl<'a> Scanner<'a> {
             if let Ok(msg) = pr_rx.try_recv() {
                 pb.println(msg);
             }
-            // everybody's busy
-            unsafe {
-                let unr = if cfg!(target_arch = "x86_64") {
-                    _rdtsc() % 100
-                }else{
-                    thread_rng().gen::<u64>() % 100
-                };
-                if unr == 0 {
-                    self.refresh_pb(&status_bar, &stats_bar);
+            if self.options.params.wordlist_len > 10000 {
+                // everybody's busy
+                unsafe {
+                    let unr = if cfg!(target_arch = "x86_64") {
+                        _rdtsc() % 100
+                    }else{
+                        thread_rng().gen::<u64>() % 100
+                    };
+                    if unr == 0 {
+                        self.refresh_pb(&status_bar, &stats_bar);
+                    }
                 }
+            }else {
+                self.refresh_pb(&status_bar, &stats_bar);
             }
+
             if let Ok(Some(resp)) = resp {
                 let mut resp_write = G_RESPONSE.write().unwrap();
                 resp_write.enqueue(resp);

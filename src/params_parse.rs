@@ -132,7 +132,7 @@ pub fn match_params(matches: &getopts::Matches) -> Result<Option<Matches>, Strin
         None => None
     };
 
-    let match_http_status_code = opt_int_split("mc", G_DEFAULT_MATCHES_STATUS_CODE, &matches);
+    let match_http_status_code = opt_int_split("mc", G_DEFAULT_MATCHES_STATUS_CODE, matches);
     let match_resp_size = opt_int_some_parm("ms", matches);
     let match_resp_line = opt_int_some_parm("ml", matches);
 

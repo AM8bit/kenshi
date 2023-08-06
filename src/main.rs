@@ -71,6 +71,7 @@ lazy_static! {
         stats.insert(Stats::DNSErr, 0);
         stats.insert(Stats::C404, 0);
         stats.insert(Stats::C200, 0);
+        stats.insert(Stats::C502, 0);
         stats.insert(Stats::C500, 0);
         stats.insert(Stats::C403, 0);
         stats.insert(Stats::C401, 0);
@@ -82,7 +83,7 @@ lazy_static! {
 }
 
 const G_DEFAULT_FILE_DESC_LIMIT: u64 = 65535;
-const G_DEFAULT_CONCURRENT_NUM: u32 = 1000;
+const G_DEFAULT_CONCURRENT_NUM: u32 = 500;
 const G_DEFAULT_MATCHES_STATUS_CODE: &str = "200,403,401,500";
 const G_DEFAULT_LOGFILE: &str = "kenshi.log";
 pub const VERSION: &str = "v0.1.2";
@@ -129,7 +130,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     opts.optopt("", "fc", "Filter HTTP status codes from response. Comma separated list of codes and ranges", "<int,...>");
     opts.optopt("", "fl", "Filter by amount of lines in response. Comma separated list of line counts and ranges. eg. --fl 123,1234 ", "<int,...>");
     opts.optopt("", "fr", r#"Filter regexp"#, "<regexp>");
-    opts.optopt("", "fs", r#"Filter HTTP response size. Comma separated list of sizes and ranges. eg. --fs "<100,>1000,10-50""#, "<rules...>");
+    opts.optopt("", "fs", r#"Filter HTTP response size. Comma separated list of sizes and ranges. eg. --fs "<100,>1000,10-50,1234""#, "<rules...>");
 
     // scan
     opts.optopt("", "rt", "Request timeout seconds", "<int>");
@@ -188,12 +189,15 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
 
     // output file
     let result_path = match matches.opt_str("o") {
-        Some(f) => f,
-        None => "output.txt".to_string()
+        Some(result_path) => {
+            if file_exists(&result_path) {
+                return Err(format!("{} exists, please note.", &result_path));
+            }
+            Some(result_path)
+        }
+        None => None
     };
-    if file_exists(&result_path) {
-        return Err(format!("{} exists, please note.", &result_path).to_string());
-    }
+
 
     let fuzz_url = match matches.opt_str("u") {
         Some(f) => {
