@@ -136,12 +136,13 @@ impl<'a> Scanner<'a> {
         if let Some(opt) = options.params.script_option {
             listen_data.use_script(opt);
         }
-        let matches = options.params.custom_matches.clone();
-        let filters = options.params.custom_filters.clone();
-        listen_data.listen_data( matches, filters);
         if let Some(p) =&options.params.result_file {
             listen_data.save_as(p)
         }
+        let matches = options.params.custom_matches.clone();
+        let filters = options.params.custom_filters.clone();
+        listen_data.handler( matches, filters);
+
         let client = self.client_build();
         let client = match client {
             Some(c) => c,

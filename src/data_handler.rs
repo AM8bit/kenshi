@@ -107,7 +107,7 @@ impl ListenData {
         self.result_outfile = Some(outfile.to_string())
     }
 
-    pub fn listen_data(&mut self, custom_matches: Option<Matches>, custom_filters: Option<FilterRules>) {
+    pub fn handler(&mut self, custom_matches: Option<Matches>, custom_filters: Option<FilterRules>) {
         //jobs
         let file = match &self.result_outfile {
             Some(p) => {
