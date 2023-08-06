@@ -120,7 +120,7 @@ The definition of [ffuf](https://github.com/ffuf/ffuf) has been adopted for some
 `kenshi -h`
 
 ```console
-Usage: target/debug/kenshi [options]
+Usage: kenshi [options]
 
 Options:
     -u, --url <url>     required. Test url
@@ -140,10 +140,10 @@ Options:
                         list of line counts and ranges. eg. --fl 123,1234
         --fr <regexp>   Filter regexp
         --fs <rules...> Filter HTTP response size. Comma separated list of
-                        sizes and ranges. eg. --fs "<100,>1000,10-50"
+                        sizes and ranges. eg. --fs "<100,>1000,10-50,1234"
         --rt <int>      Request timeout seconds
     -c, --concurrent <int>
-                        Number of concurrent requests. default: 1000
+                        Number of concurrent requests. default: 500
         --follow-redirect <int>
                         enable redirect 301/302. disabled by default
     -r, --retries <int> Number of failed retry requests
