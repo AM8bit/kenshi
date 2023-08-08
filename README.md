@@ -75,8 +75,8 @@ time kenshi -u https://FUZZ/robots.txt -w 10m-domains_public.txt -c 5000 --mr ad
 
 | Project | Wordlist 10,000,000/lines | Version | Time Consumption | Hits | Maximum Memory Usage | Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| [ffuf](https://github.com/ffuf/ffuf) | 10,000,000 | v2.0.0-dev | ？   | ?   | 22g+ | container crash(systemd-oomd killed) |
-| [httpx](https://github.com/projectdiscovery/httpx) | 10,000,000 | v1.3.4 | ？   | ?   | 10g++ | container crash(systemd-oomd killed) |
+| [ffuf](https://github.com/ffuf/ffuf) | 10,000,000 | v2.0.0-dev | ？   | ?   | 22g+ | systemd-oomd killed |
+| [httpx](https://github.com/projectdiscovery/httpx) | 10,000,000 | v1.3.4 | ？   | ?   | 10g++ | systemd-oomd killed |
 | kenshi | 10,000,000 | v0.1.2 | 57m5.310s | 3219982 | 8835M | complete |
 
 
