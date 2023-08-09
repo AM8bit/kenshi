@@ -86,7 +86,7 @@ time kenshi -u https://FUZZ/robots.txt -w 10m-domains_public.txt -c 5000 --mr ad
 | --- | --- | --- | --- | --- | --- | --- |
 | [ffuf](https://github.com/ffuf/ffuf) | 100,000 | v2.0.0-dev | 0m54.301s | 10950 | 1076M   | complete |
 | [httpx](https://github.com/projectdiscovery/httpx) | 100,000 | v1.3.4 | 1m4.815s | 11995 | 1060M | complete |
-| [wfuzz](https://github.com/xmendez/wfuzz) | 10,000,000 | 3.1.0 | 75m34.224s   | 12325   | 462M | complete |
+| [wfuzz](https://github.com/xmendez/wfuzz) | 100,000 | 3.1.0 | 75m34.224s   | 12325   | 462M | complete |
 | kenshi | 100,000 | v0.1.2 | 0m32.100s | 11980 | 2531M | complete |
 
 
