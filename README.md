@@ -67,6 +67,7 @@ only need results and speed, don't care about everything.
 ```bash
 time ffuf -u https://FUZZ/robots.txt -w 10m-domains_public.txt -timeout 10 -mr admin -t 5000 -of csv -o ffuf.csv
 time httpx -l robots.txt_public_urls.txt -rl 99999 -t 5000 -mc 200 -retries 1 -timeout 10 -mr admin -o httpx.out
+time wfuzz -t 30 --ss admin -w $PWD/public_domains-10000.txt -Z https://FUZZ/robots.txt # only threads
 time kenshi -u https://FUZZ/robots.txt -w 10m-domains_public.txt -c 5000 --mr admin -v -o ken.out
 ```
 
