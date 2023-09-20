@@ -52,36 +52,3 @@ pub fn stats_code_inc(stat: &u16) {
     };
     stats_inc(code)
 }
-/*
-[src/error.rs:25] &s = Some(
-    hyper::Error(
-        Connect,
-        ConnectError(
-            "dns error",
-            ResolveError {
-                kind: NoRecordsFound {
-                    query: Query {
-                        name: Name("fmprc.gov.cn.localdomain."),
-                        query_type: AAAA,
-                        query_class: IN,
-                    },
-                    soa: Some(
-                        Record {
-                            name_labels: Name("."),
-                            rr_type: SOA,
-                            dns_class: IN,
-                            ttl: 86357,
-                            rdata: Some(
-                                SOA(
-                                    SOA {
-                                        mname: Name("a.root-servers.net."),
-                                        rname: Name("nstld.verisign-grs.com."),
-                                        serial: 2023072100,
-                                        refresh: 1800,
-                                        retry: 900,
-                                        expire: 604800,
-                                        minimum: 86400,
-                                    },
-                                ),
-                            ),
- */

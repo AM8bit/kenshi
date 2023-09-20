@@ -32,6 +32,7 @@ mod error;
 mod tests;
 mod params_parse;
 mod rawhttp;
+mod dns_preheat;
 
 #[derive(Debug)]
 struct Queue<T> {
@@ -84,9 +85,9 @@ lazy_static! {
 
 const G_DEFAULT_FILE_DESC_LIMIT: u64 = 65535;
 const G_DEFAULT_CONCURRENT_NUM: u32 = 500;
-const G_DEFAULT_MATCHES_STATUS_CODE: &str = "200,403,401,500";
+const G_DEFAULT_MATCHES_STATUS_CODE: &str = "200,301,403,401,500";
 const G_DEFAULT_LOGFILE: &str = "kenshi.log";
-pub const VERSION: &str = "v0.1.2";
+pub const VERSION: &str = "v0.1.3";
 
 fn print_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} [options]", program);
@@ -95,11 +96,12 @@ fn print_usage(program: &str, opts: Options) {
 
 fn print_start_info(option: &data_type::Options) {
     println!("wordlist: {}/lines", option.params.wordlist_len);
-    println!("concurrents: {}", option.params.concurrent_num);
+    println!("concurrent: {}", option.params.concurrent_num);
     println!("retries: {}", option.params.request_retries);
     println!("request timeout: {}/s", option.params.request_timeout);
     println!("user-agent: {}", option.params.user_agent);
     println!("dns servers: {}", DEFAULT_DNS_SERVERS.len());
+    println!("dns try: {}", option.params.dns_try);
     println!("memory: {:.2}/Gb", bytes_to_gb(option.sys.total_memory()));
     println!("swap: {:.2}/Mb", bytes_to_mb(option.sys.total_swap()));
     println!("mode: {}", option.params.scan_mode.to_string());
@@ -137,6 +139,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
     opts.optopt("c", "concurrent", &format!("Number of concurrent requests. default: {G_DEFAULT_CONCURRENT_NUM}"), "<int>");
     opts.optopt("", "follow-redirect", "enable redirect 301/302. disabled by default", "<int>");
     opts.optopt("r", "retries", "Number of failed retry requests", "<int>");
+    opts.optflag("", "dns-try", "Try multiple sets of nameservers to mitigate dns resolution failures");
 
     // http option
     /*
@@ -284,11 +287,11 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
         }
         if ext_s.is_empty() {
             let _ = term.clear_line();
-            return Err("extensions invalid. for example: php,db,conf,bak".to_string());
+            return Err("extensions invalid. for example:-e php,db,conf,bak".to_string());
         }
 
         let mut new_wordlist: HashSet<String> = HashSet::new();
-        for line in wordlist.clone().iter() {
+        for line in wordlist.iter() {
             if line.contains("%EXT%") {
                 for s in ext_s.iter() {
                     new_wordlist.insert(line.replace("%EXT%", s));
@@ -346,6 +349,9 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
         print_state = true
     }
 
+    // dns mitigate
+    let dns_try = matches.opt_present("dns-try");
+
     // User-agent random choose
     let mut rng = rand::thread_rng();
     let ua_str = COMMON_USER_AGENTS[rng.gen_range(0..COMMON_USER_AGENTS.len() - 1)];
@@ -362,6 +368,7 @@ pub fn parse_args(args: &[String]) -> Result<Params, String> {
         custom_matches,
         request_retries,
         proxy_server,
+        dns_try,
         proxy_user: proxy_user.to_owned(),
         proxy_pass: proxy_pass.to_owned(),
         script_option: script,

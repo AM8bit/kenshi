@@ -23,6 +23,7 @@ pub struct Params {
     pub script_option: Option<ScriptOpt>,
     pub scan_mode: ScanMode,
     pub no_color: bool,
+    pub dns_try: bool,
     pub custom_matches: Option<Matches>,
     pub custom_filters: Option<FilterRules>,
 }

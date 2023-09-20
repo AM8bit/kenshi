@@ -164,13 +164,7 @@ impl ListenData {
 
                     let resp = resp.unwrap();
                     let url = resp.url.to_string();
-                    let html = match String::from_utf8(resp.html.to_vec()) {
-                        Ok(r) => r,
-                        Err(e) => {
-                            log::warn!("{}", e.to_string());
-                            continue
-                        },
-                    };
+                    let html = String::from_utf8_lossy(resp.html.as_slice());
 
                     if scan_mode == ScanMode::Debug {
                         let mut print_data = PrintData::default();
@@ -207,7 +201,7 @@ impl ListenData {
 
                     // if using script
                     if let Some(engine) = &script_ctx {
-                        match engine.run_script(html) {
+                        match engine.run_script(html.parse().unwrap()) {
                             Ok(script_output) => {
                                 msg_sender.set_script_output(script_output);
                             }
@@ -218,6 +212,7 @@ impl ListenData {
                     if scan_mode == ScanMode::Debug {
                         let color = match &resp.status {
                             200 => Style::new().green().bold(),
+                            301 => Style::new().blue(),
                             404 => Style::new().dim().bold(),
                             403 => Style::new().yellow().bold(),
                             500 => Style::new().red().bold(),
@@ -229,7 +224,7 @@ impl ListenData {
                     } else {
                         msg_sender.set_msg(url.to_string()).send();
                     }
-
+                    drop(resp);
                     stats_inc(&Stats::Hits);
                     let mut file = outfile.lock().unwrap();
                     if let Some(ref mut file) = *file {

@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread::sleep;
@@ -7,6 +8,7 @@ use futures::{stream, StreamExt};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use rand::{Rng, thread_rng};
 use reqwest::{Client, header, redirect};
+use reqwest::dns::Resolve;
 use reqwest::header::HeaderMap;
 use tokio::time::Instant;
 use trust_dns_resolver::system_conf::read_system_conf;
@@ -15,6 +17,7 @@ use crate::{G_LOOP_BREAK, G_RESPONSE, G_STATS, HttpResp};
 use crate::data_handler::ListenData;
 use crate::data_type::*;
 use crate::error::{stats_code_inc, stats_err_inc};
+use crate::dns_preheat::TrustDnsResolver;
 
 pub struct Scanner<'a> {
     options: &'a Options<'a>,
@@ -88,8 +91,6 @@ impl<'a> Scanner<'a> {
         headers.insert(header::USER_AGENT, options.params.user_agent.parse().unwrap());
         headers.insert(header::ACCEPT_LANGUAGE, "en-US,en;q=0.9".parse().unwrap());
 
-        let (config, opts) = read_system_conf().unwrap();
-        let _dns = trust_dns_resolver::TokioAsyncResolver::tokio(config, opts).unwrap();
         let mut client = Client::builder()
             .use_rustls_tls()
             .http1_title_case_headers() // Optimize HTTP/1 header formatting for better performance
@@ -106,7 +107,9 @@ impl<'a> Scanner<'a> {
             .deflate(true)
             .tcp_nodelay(true)
             .tcp_keepalive(None);
-        //.dns_resolver(Arc::new(TrustDnsResolver::new().map_err(crate::error::builder)?));
+        if options.params.dns_try {
+            client = client.dns_resolver(Arc::new(TrustDnsResolver::new().unwrap()));
+        }
         if options.params.follow_redirect == 0 {
             client = client.redirect(redirect::Policy::none())
         } else {
@@ -119,7 +122,7 @@ impl<'a> Scanner<'a> {
                     client = client.proxy(p);
                 }
                 Err(e) => {
-                    println!("{}", e.to_string());
+                    println!("{e}");
                     return None;
                 }
             }
@@ -194,7 +197,7 @@ impl<'a> Scanner<'a> {
                                     });
                                 }
                                 Err(e) => {
-                                    log::info!("{}", e.to_string());
+                                    log::warn!("{}", e.to_string());
                                 }
                             }
                         }
@@ -217,13 +220,13 @@ impl<'a> Scanner<'a> {
             if let Ok(msg) = pr_rx.try_recv() {
                 pb.println(msg);
             }
-            if self.options.params.wordlist_len > 10000 {
+            if self.options.params.wordlist_len > 100000 {
                 // everybody's busy
                 unsafe {
                     let unr = if cfg!(target_arch = "x86_64") {
-                        _rdtsc() % 100
+                        _rdtsc() % 500
                     }else{
-                        thread_rng().gen::<u64>() % 100
+                        thread_rng().gen::<u64>() % 500
                     };
                     if unr == 0 {
                         self.refresh_pb(&status_bar, &stats_bar);
